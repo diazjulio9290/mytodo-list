@@ -292,6 +292,24 @@
         box-shadow: 0 16px 28px rgba(12, 143, 134, 0.24);
       }
 
+      .danger {
+        min-height: 42px;
+        border: 0;
+        border-radius: 8px;
+        background: #fff0ee;
+        color: #b23a31;
+        cursor: pointer;
+        font-weight: 850;
+        transition:
+          transform 150ms ease,
+          background 150ms ease;
+      }
+
+      .danger:hover {
+        transform: translateY(-1px);
+        background: #ffe3df;
+      }
+
       .secondary {
         padding: 0 14px;
       }
@@ -493,6 +511,13 @@
         list-style: none;
       }
 
+      .reset-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
       .history-item {
         padding: 12px;
         border: 1px solid var(--line);
@@ -675,6 +700,7 @@
 
         .duration-row,
         .actions,
+        .reset-actions,
         .task {
           grid-template-columns: 1fr;
         }
@@ -695,14 +721,14 @@
         <p class="eyebrow">Saved planner</p>
         <h1>Sign in to your day.</h1>
         <p class="subtle">
-          Create a local account to keep your calendar, activity history, and
-          active schedule saved in this browser.
+          Create an account to keep your calendar, activity history, and active
+          schedule saved with Supabase.
         </p>
 
         <form id="loginForm">
           <label>
-            Username
-            <input id="username" type="text" autocomplete="username" required />
+            Email
+            <input id="username" type="email" autocomplete="email" required />
           </label>
           <label>
             Password
@@ -717,8 +743,7 @@
           <p class="form-message" id="loginMessage"></p>
         </form>
         <p class="login-hint">
-          This is local browser login for your saved sessions. For secure login
-          across devices, connect this app to a hosted backend later.
+          Your account and tasks sync through Supabase Auth and Postgres.
         </p>
       </div>
     </section>
@@ -810,6 +835,14 @@
               <button class="ghost" id="todayButton" type="button">Today</button>
             </div>
             <ol class="history-list" id="historyList"></ol>
+            <div class="reset-actions">
+              <button class="danger" id="resetDayButton" type="button">
+                Reset this day
+              </button>
+              <button class="danger" id="resetAllButton" type="button">
+                Reset all
+              </button>
+            </div>
           </aside>
         </div>
 
@@ -839,9 +872,15 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      const storageKey = "productiveDayPlanner:v2";
-      const sessionKey = "productiveDayPlanner:activeUser";
+      const supabaseUrl = "https://jskklrwexipijoxqobvh.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza2tscndleGlwaWpveHFvYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY4NjEsImV4cCI6MjA5Mjc4Mjg2MX0.vLjQ1pdw3m-RigCaLGTZulmx5skXeoMpcl6HgxqyiY0";
+      const supabaseClient = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey,
+      );
       const app = document.querySelector("#app");
       const loginScreen = document.querySelector("#loginScreen");
       const loginForm = document.querySelector("#loginForm");
@@ -865,14 +904,19 @@
       const prevMonth = document.querySelector("#prevMonth");
       const nextMonth = document.querySelector("#nextMonth");
       const todayButton = document.querySelector("#todayButton");
+      const resetDayButton = document.querySelector("#resetDayButton");
+      const resetAllButton = document.querySelector("#resetAllButton");
       const historyList = document.querySelector("#historyList");
       const dateSummary = document.querySelector("#dateSummary");
       const selectedDateLabel = document.querySelector("#selectedDateLabel");
 
-      let database = loadDatabase();
-      let currentUser = localStorage.getItem(sessionKey);
+      let session = null;
+      let tasks = [];
+      let historyEntries = [];
+      let activityDates = new Set();
       let selectedDate = dateKey(new Date());
       let calendarCursor = startOfMonth(new Date());
+      let isLoading = false;
 
       const pacificFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
@@ -890,53 +934,11 @@
         year: "numeric",
       });
 
-      function loadDatabase() {
-        try {
-          return JSON.parse(localStorage.getItem(storageKey)) || { users: {} };
-        } catch {
-          return { users: {} };
-        }
-      }
-
-      function saveDatabase() {
-        localStorage.setItem(storageKey, JSON.stringify(database));
-      }
-
-      function userData() {
-        if (!database.users[currentUser]) return null;
-        database.users[currentUser].days ||= {};
-        return database.users[currentUser];
-      }
-
-      function dayData(key = selectedDate) {
-        const user = userData();
-        if (!user.days[key]) {
-          user.days[key] = { tasks: [], doneAdding: false };
-        }
-        return user.days[key];
-      }
-
-      async function hashPassword(password) {
-        if (!crypto.subtle) {
-          let hash = 5381;
-          for (let index = 0; index < password.length; index += 1) {
-            hash = (hash * 33) ^ password.charCodeAt(index);
-          }
-          return `local-${(hash >>> 0).toString(16)}`;
-        }
-
-        const data = new TextEncoder().encode(password);
-        const hash = await crypto.subtle.digest("SHA-256", data);
-        return Array.from(new Uint8Array(hash))
-          .map((byte) => byte.toString(16).padStart(2, "0"))
-          .join("");
-      }
-
       function showApp() {
         loginScreen.hidden = true;
         app.hidden = false;
         document.body.classList.remove("locked");
-        activeUser.textContent = `Signed in as ${currentUser}`;
+        activeUser.textContent = `Signed in as ${session.user.email}`;
         render();
       }
 
@@ -1004,50 +1006,197 @@
         return date;
       }
 
-      function rescheduleDay(day) {
-        let nextStart = null;
+      function normalizeTask(row) {
+        return {
+          ...row,
+          name: row.task_name,
+          minutes: row.duration_minutes,
+          startAt: row.start_at,
+          endAt: row.end_at,
+          doneAdding: row.done_adding,
+        };
+      }
 
-        day.tasks.forEach((task, index) => {
-          const startAt = index === 0 ? firstStartTime() : nextStart;
+      function selectedDoneAdding() {
+        return tasks.some((task) => task.done_adding);
+      }
+
+      function rescheduleDay(day, anchorStart = null) {
+        let nextStart = null;
+        const firstStart = anchorStart || firstStartTime();
+
+        day.forEach((task, index) => {
+          const startAt = index === 0 ? firstStart : nextStart;
           const endAt = new Date(startAt.getTime() + task.minutes * 60 * 1000);
-          task.startAt = startAt.toISOString();
-          task.endAt = endAt.toISOString();
+          task.start_at = startAt.toISOString();
+          task.end_at = endAt.toISOString();
+          task.startAt = task.start_at;
+          task.endAt = task.end_at;
+          task.sort_order = index;
           nextStart = endAt;
         });
       }
 
-      function addTask(name, minutes) {
-        const day = dayData();
+      async function loadSelectedDateData() {
+        if (!session) return;
+        isLoading = true;
+        render();
+
+        const [{ data: taskRows, error: taskError }, { data: dateRows }, { data: historyRows }] =
+          await Promise.all([
+            supabaseClient
+              .from("tasks")
+              .select("*")
+              .eq("task_date", selectedDate)
+              .order("sort_order", { ascending: true })
+              .order("start_at", { ascending: true }),
+            supabaseClient.from("tasks").select("task_date"),
+            supabaseClient
+              .from("tasks")
+              .select("*")
+              .order("start_at", { ascending: false })
+              .limit(20),
+          ]);
+
+        if (taskError) {
+          loginMessage.textContent =
+            "Could not load tasks. Check that the Supabase tasks table and policies are created.";
+          tasks = [];
+        } else {
+          tasks = (taskRows || []).map(normalizeTask);
+        }
+
+        activityDates = new Set((dateRows || []).map((row) => row.task_date));
+        historyEntries = (historyRows || []).map(normalizeTask);
+        isLoading = false;
+        render();
+      }
+
+      async function persistSchedule() {
+        const originalFirstStart = tasks[0] ? new Date(tasks[0].startAt) : null;
+        rescheduleDay(tasks, originalFirstStart);
+
+        const updates = tasks.map((task) =>
+          supabaseClient
+            .from("tasks")
+            .update({
+              task_name: task.name,
+              duration_minutes: task.minutes,
+              start_at: task.start_at,
+              end_at: task.end_at,
+              sort_order: task.sort_order,
+              done_adding: task.doneAdding,
+              updated_at: now().toISOString(),
+            })
+            .eq("id", task.id)
+            .eq("user_id", session.user.id),
+        );
+
+        const results = await Promise.all(updates);
+        const failed = results.find((result) => result.error);
+        if (failed) throw failed.error;
+      }
+
+      async function addTask(name, minutes) {
         const durationMs = minutes * 60 * 1000;
-        const lastTask = day.tasks.at(-1);
+        const lastTask = tasks.at(-1);
         const startAt = lastTask ? new Date(lastTask.endAt) : firstStartTime();
         const endAt = new Date(startAt.getTime() + durationMs);
 
-        day.tasks.push({
-          id: crypto.randomUUID(),
-          name,
-          minutes,
-          createdAt: now().toISOString(),
-          startAt: startAt.toISOString(),
-          endAt: endAt.toISOString(),
-        });
+        const { data, error } = await supabaseClient
+          .from("tasks")
+          .insert({
+            user_id: session.user.id,
+            task_name: name,
+            duration_minutes: minutes,
+            task_date: selectedDate,
+            start_at: startAt.toISOString(),
+            end_at: endAt.toISOString(),
+            sort_order: tasks.length,
+            done_adding: false,
+          })
+          .select()
+          .single();
 
-        day.doneAdding = false;
-        saveDatabase();
-        render();
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        tasks.push(normalizeTask(data));
+        await loadSelectedDateData();
       }
 
-      function deleteTask(taskId) {
-        const day = dayData();
-        day.tasks = day.tasks.filter((task) => task.id !== taskId);
-        rescheduleDay(day);
-        saveDatabase();
-        render();
+      async function deleteTask(taskId) {
+        const { error } = await supabaseClient
+          .from("tasks")
+          .delete()
+          .eq("id", taskId)
+          .eq("user_id", session.user.id);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        tasks = tasks.filter((task) => task.id !== taskId);
+        try {
+          await persistSchedule();
+          await loadSelectedDateData();
+        } catch (scheduleError) {
+          alert(scheduleError.message);
+        }
       }
 
-      function editTask(taskId) {
-        const day = dayData();
-        const task = day.tasks.find((item) => item.id === taskId);
+      async function resetSelectedDay() {
+        const label = dateLabelFormatter.format(dateFromKey(selectedDate));
+        const confirmed = confirm(`Reset all tasks for ${label}?`);
+        if (!confirmed) return;
+
+        const { error } = await supabaseClient
+          .from("tasks")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("task_date", selectedDate);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        tasks = [];
+        await loadSelectedDateData();
+      }
+
+      async function resetAllTasks() {
+        const confirmed = confirm(
+          "Reset all of your saved tasks across every calendar day?",
+        );
+        if (!confirmed) return;
+
+        const secondConfirmed = confirm(
+          "This permanently deletes your task history from Supabase. Continue?",
+        );
+        if (!secondConfirmed) return;
+
+        const { error } = await supabaseClient
+          .from("tasks")
+          .delete()
+          .eq("user_id", session.user.id);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        tasks = [];
+        historyEntries = [];
+        activityDates = new Set();
+        await loadSelectedDateData();
+      }
+
+      async function editTask(taskId) {
+        const task = tasks.find((item) => item.id === taskId);
         if (!task) return;
 
         const newName = prompt("Edit task", task.name);
@@ -1064,24 +1213,30 @@
 
         task.name = cleanName;
         task.minutes = minutes;
-        task.updatedAt = now().toISOString();
-        rescheduleDay(day);
-        saveDatabase();
-        render();
+        task.task_name = cleanName;
+        task.duration_minutes = minutes;
+
+        try {
+          await persistSchedule();
+          await loadSelectedDateData();
+        } catch (error) {
+          alert(error.message);
+        }
       }
 
       function render() {
-        if (!currentUser || !userData()) return;
-
-        const day = dayData();
-        const tasks = day.tasks;
         const current = now();
         clock.textContent = formatTime(current);
+
+        if (!session) return;
+
         empty.hidden = tasks.length > 0;
-        dayNote.hidden = !day.doneAdding || tasks.length === 0;
+        dayNote.hidden = !selectedDoneAdding() || tasks.length === 0;
         selectedDateLabel.textContent = dateLabelFormatter.format(dateFromKey(selectedDate));
 
-        taskList.innerHTML = tasks.map((task) => renderTask(task, current)).join("");
+        taskList.innerHTML = isLoading
+          ? `<li class="history-item"><strong>Loading timeline</strong><span>Fetching your saved tasks.</span></li>`
+          : tasks.map((task) => renderTask(task, current)).join("");
         renderStatus(tasks, current);
         renderCalendar();
         renderHistory();
@@ -1173,7 +1328,6 @@
       }
 
       function renderCalendar() {
-        const user = userData();
         const monthStart = startOfMonth(calendarCursor);
         const firstCell = new Date(monthStart);
         firstCell.setDate(monthStart.getDate() - monthStart.getDay());
@@ -1183,7 +1337,7 @@
           const cellDate = new Date(firstCell);
           cellDate.setDate(firstCell.getDate() + index);
           const key = dateKey(cellDate);
-          const hasTasks = (user.days[key]?.tasks.length || 0) > 0;
+          const hasTasks = activityDates.has(key);
           const classes = [
             "calendar-day",
             cellDate.getMonth() !== monthStart.getMonth() ? "muted" : "",
@@ -1199,16 +1353,11 @@
       }
 
       function renderHistory() {
-        const entries = Object.entries(userData().days)
-          .flatMap(([key, day]) =>
-            day.tasks.map((task) => ({
-              key,
-              task,
-              startAt: new Date(task.startAt),
-            })),
-          )
-          .sort((a, b) => b.startAt - a.startAt)
-          .slice(0, 12);
+        const entries = historyEntries.map((task) => ({
+          key: task.task_date,
+          task,
+          startAt: new Date(task.startAt),
+        }));
 
         historyList.innerHTML =
           entries.length === 0
@@ -1241,65 +1390,73 @@
       loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         loginMessage.textContent = "";
-        const username = usernameInput.value.trim().toLowerCase();
+        const email = usernameInput.value.trim().toLowerCase();
         const password = passwordInput.value;
 
-        if (!username || !password) return;
+        if (!email || !password) return;
 
-        const passwordHash = await hashPassword(password);
-        const existing = database.users[username];
+        const signIn = await supabaseClient.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-        if (existing && existing.passwordHash !== passwordHash) {
-          loginMessage.textContent = "That password does not match this account.";
-          return;
+        if (signIn.error) {
+          const signUp = await supabaseClient.auth.signUp({ email, password });
+
+          if (signUp.error) {
+            loginMessage.textContent = signUp.error.message;
+            return;
+          }
+
+          if (!signUp.data.session) {
+            loginMessage.textContent =
+              "Account created. Check your email to confirm, then sign in.";
+            return;
+          }
         }
 
-        if (!existing) {
-          database.users[username] = {
-            passwordHash,
-            createdAt: now().toISOString(),
-            days: {},
-          };
-          saveDatabase();
-        }
+        const { data } = await supabaseClient.auth.getSession();
+        session = data.session;
 
-        currentUser = username;
-        localStorage.setItem(sessionKey, username);
         passwordInput.value = "";
         showApp();
+        await loadSelectedDateData();
       });
 
-      logoutButton.addEventListener("click", () => {
-        currentUser = null;
-        localStorage.removeItem(sessionKey);
+      logoutButton.addEventListener("click", async () => {
+        await supabaseClient.auth.signOut();
+        session = null;
+        tasks = [];
+        historyEntries = [];
+        activityDates = new Set();
         showLogin();
       });
 
-      taskForm.addEventListener("submit", (event) => {
+      taskForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const name = taskName.value.trim();
         const minutes = Number(taskDuration.value);
 
         if (!name || !Number.isFinite(minutes) || minutes < 1) return;
 
-        addTask(name, Math.round(minutes));
+        await addTask(name, Math.round(minutes));
         taskForm.reset();
         taskName.focus();
       });
 
-      taskList.addEventListener("click", (event) => {
+      taskList.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-action][data-task-id]");
         if (!button) return;
 
         const { action, taskId } = button.dataset;
 
         if (action === "edit") {
-          editTask(taskId);
+          await editTask(taskId);
           return;
         }
 
         if (action === "delete" && confirm("Delete this task and move the following tasks up?")) {
-          deleteTask(taskId);
+          await deleteTask(taskId);
         }
       });
 
@@ -1310,56 +1467,70 @@
         });
       });
 
-      finishDay.addEventListener("click", () => {
-        const day = dayData();
-        day.doneAdding = true;
+      finishDay.addEventListener("click", async () => {
+        tasks = tasks.map((task) => ({ ...task, doneAdding: true, done_adding: true }));
 
-        if (day.tasks.length === 0) {
+        if (tasks.length === 0) {
           empty.hidden = false;
           empty.querySelector("strong").textContent = "Enjoy your productive day.";
           empty.querySelector("p").lastChild.textContent = " Add a task if your plans change.";
+          render();
+          return;
         }
 
         taskName.value = "";
         taskDuration.value = "";
-        saveDatabase();
-        render();
+
+        try {
+          await persistSchedule();
+          await loadSelectedDateData();
+        } catch (error) {
+          alert(error.message);
+        }
       });
 
-      calendarGrid.addEventListener("click", (event) => {
+      calendarGrid.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-date]");
         if (!button) return;
         selectedDate = button.dataset.date;
         calendarCursor = startOfMonth(dateFromKey(selectedDate));
-        render();
+        await loadSelectedDateData();
       });
 
-      prevMonth.addEventListener("click", () => {
+      prevMonth.addEventListener("click", async () => {
         calendarCursor.setMonth(calendarCursor.getMonth() - 1);
         calendarCursor = startOfMonth(calendarCursor);
-        render();
+        await loadSelectedDateData();
       });
 
-      nextMonth.addEventListener("click", () => {
+      nextMonth.addEventListener("click", async () => {
         calendarCursor.setMonth(calendarCursor.getMonth() + 1);
         calendarCursor = startOfMonth(calendarCursor);
-        render();
+        await loadSelectedDateData();
       });
 
-      todayButton.addEventListener("click", () => {
+      todayButton.addEventListener("click", async () => {
         selectedDate = dateKey(new Date());
         calendarCursor = startOfMonth(new Date());
-        render();
+        await loadSelectedDateData();
       });
 
-      if (currentUser && database.users[currentUser]) {
-        showApp();
-      } else {
-        currentUser = null;
-        localStorage.removeItem(sessionKey);
-        showLogin();
+      resetDayButton.addEventListener("click", resetSelectedDay);
+      resetAllButton.addEventListener("click", resetAllTasks);
+
+      async function init() {
+        const { data } = await supabaseClient.auth.getSession();
+        session = data.session;
+
+        if (session) {
+          showApp();
+          await loadSelectedDateData();
+        } else {
+          showLogin();
+        }
       }
 
+      init();
       setInterval(render, 1000);
     </script>
   </body>
