@@ -246,6 +246,12 @@
         align-items: end;
       }
 
+      .auth-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
       .quick {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -699,6 +705,7 @@
         }
 
         .duration-row,
+        .auth-actions,
         .actions,
         .reset-actions,
         .task {
@@ -739,7 +746,12 @@
               required
             />
           </label>
-          <button class="primary" type="submit">Sign in or create account</button>
+          <div class="auth-actions">
+            <button class="primary" type="submit">Sign in</button>
+            <button class="secondary" id="createAccountButton" type="button">
+              Create account
+            </button>
+          </div>
           <p class="form-message" id="loginMessage"></p>
         </form>
         <p class="login-hint">
@@ -885,6 +897,7 @@
       const loginScreen = document.querySelector("#loginScreen");
       const loginForm = document.querySelector("#loginForm");
       const loginMessage = document.querySelector("#loginMessage");
+      const createAccountButton = document.querySelector("#createAccountButton");
       const usernameInput = document.querySelector("#username");
       const passwordInput = document.querySelector("#password");
       const activeUser = document.querySelector("#activeUser");
@@ -1387,40 +1400,67 @@
         });
       }
 
-      loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        loginMessage.textContent = "";
-        const email = usernameInput.value.trim().toLowerCase();
-        const password = passwordInput.value;
-
-        if (!email || !password) return;
-
-        const signIn = await supabaseClient.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signIn.error) {
-          const signUp = await supabaseClient.auth.signUp({ email, password });
-
-          if (signUp.error) {
-            loginMessage.textContent = signUp.error.message;
-            return;
-          }
-
-          if (!signUp.data.session) {
-            loginMessage.textContent =
-              "Account created. Check your email to confirm, then sign in.";
-            return;
-          }
-        }
-
+      async function completeAuth() {
         const { data } = await supabaseClient.auth.getSession();
         session = data.session;
 
         passwordInput.value = "";
         showApp();
         await loadSelectedDateData();
+      }
+
+      function readCredentials() {
+        loginMessage.textContent = "";
+        const email = usernameInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+          loginMessage.textContent = "Enter an email and password.";
+          return null;
+        }
+
+        return { email, password };
+      }
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const credentials = readCredentials();
+        if (!credentials) return;
+
+        const signIn = await supabaseClient.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (signIn.error) {
+          loginMessage.textContent = signIn.error.message;
+          return;
+        }
+
+        await completeAuth();
+      });
+
+      createAccountButton.addEventListener("click", async () => {
+        const credentials = readCredentials();
+        if (!credentials) return;
+
+        const signUp = await supabaseClient.auth.signUp({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (signUp.error) {
+          loginMessage.textContent = signUp.error.message;
+          return;
+        }
+
+        if (!signUp.data.session) {
+          loginMessage.textContent =
+            "Account created. Check your email to confirm, then sign in.";
+          return;
+        }
+
+        await completeAuth();
       });
 
       logoutButton.addEventListener("click", async () => {
