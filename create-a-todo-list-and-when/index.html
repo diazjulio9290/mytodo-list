@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Productive Day Timer</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18202f;
+        --muted: #627088;
+        --soft: #eef3f7;
+        --line: #dde6ed;
+        --paper: rgba(255, 255, 255, 0.88);
+        --teal: #0c8f86;
+        --teal-dark: #08726c;
+        --gold: #f4b942;
+        --coral: #ff6f61;
+        --shadow: 0 24px 70px rgba(22, 39, 61, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 16%, rgba(244, 185, 66, 0.28), transparent 30%),
+          radial-gradient(circle at 86% 18%, rgba(12, 143, 134, 0.2), transparent 28%),
+          linear-gradient(135deg, #f8faf8 0%, #edf5f3 48%, #f7f1ea 100%);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      body.locked {
+        overflow: hidden;
+      }
+
+      .login-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background:
+          linear-gradient(rgba(248, 250, 248, 0.78), rgba(237, 245, 243, 0.86)),
+          radial-gradient(circle at 16% 18%, rgba(244, 185, 66, 0.4), transparent 32%),
+          radial-gradient(circle at 80% 22%, rgba(12, 143, 134, 0.32), transparent 30%);
+        backdrop-filter: blur(18px);
+      }
+
+      .login-box {
+        width: min(430px, 100%);
+        padding: 26px;
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .login-box h1 {
+        margin-bottom: 10px;
+        font-size: 2.3rem;
+        line-height: 1;
+      }
+
+      .login-box form {
+        margin-top: 20px;
+      }
+
+      .form-message {
+        min-height: 22px;
+        margin: 0;
+        color: var(--coral);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .login-hint {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 34px 0;
+      }
+
+      .app[hidden],
+      .login-screen[hidden],
+      [hidden] {
+        display: none !important;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        gap: 24px;
+        padding: 12px 0 28px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--teal-dark);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 720px;
+        font-size: clamp(2.25rem, 5vw, 5rem);
+        line-height: 0.96;
+        letter-spacing: 0;
+      }
+
+      .clock {
+        min-width: 250px;
+        padding: 18px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .header-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .user-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 800;
+      }
+
+      .clock-label {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .clock-time {
+        font-size: 2rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(300px, 360px) 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .panel,
+      .timeline,
+      .calendar-panel,
+      .history-panel {
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        border-radius: 8px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .panel {
+        position: sticky;
+        top: 24px;
+        padding: 22px;
+      }
+
+      .panel h2,
+      .timeline h2,
+      .calendar-panel h2,
+      .history-panel h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .subtle {
+        margin: 8px 0 20px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      form {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        color: #334056;
+        font-size: 0.88rem;
+        font-weight: 750;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        padding: 13px 14px;
+        outline: 3px solid transparent;
+        transition:
+          border-color 160ms ease,
+          outline-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      input:focus {
+        border-color: rgba(12, 143, 134, 0.7);
+        outline-color: rgba(12, 143, 134, 0.16);
+        box-shadow: 0 8px 24px rgba(12, 143, 134, 0.11);
+      }
+
+      .duration-row {
+        display: grid;
+        grid-template-columns: 1fr 128px;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .quick {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .quick button,
+      .ghost,
+      .secondary,
+      .primary {
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 800;
+        transition:
+          transform 150ms ease,
+          box-shadow 150ms ease,
+          background 150ms ease;
+      }
+
+      .quick button,
+      .ghost,
+      .secondary {
+        min-height: 42px;
+        background: #edf5f3;
+        color: var(--teal-dark);
+      }
+
+      .quick button:hover,
+      .ghost:hover,
+      .secondary:hover,
+      .primary:hover {
+        transform: translateY(-1px);
+      }
+
+      .ghost {
+        padding: 0 13px;
+      }
+
+      .primary {
+        min-height: 50px;
+        background: var(--teal);
+        color: white;
+        box-shadow: 0 16px 28px rgba(12, 143, 134, 0.24);
+      }
+
+      .secondary {
+        padding: 0 14px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      .timeline {
+        min-height: 540px;
+        padding: 22px;
+      }
+
+      .workspace {
+        display: grid;
+        gap: 22px;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 22px;
+      }
+
+      .calendar-panel,
+      .history-panel {
+        padding: 18px;
+      }
+
+      .calendar-top,
+      .section-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .month-title {
+        font-size: 0.95rem;
+        font-weight: 900;
+      }
+
+      .calendar-controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        display: inline-grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 0;
+        border-radius: 8px;
+        background: #edf5f3;
+        color: var(--teal-dark);
+        cursor: pointer;
+        font-weight: 900;
+      }
+
+      .weekdays,
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+      }
+
+      .weekdays {
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .calendar-day {
+        position: relative;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font-weight: 850;
+      }
+
+      .calendar-day.muted {
+        color: #a1abba;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .calendar-day.today {
+        border-color: rgba(244, 185, 66, 0.8);
+      }
+
+      .calendar-day.selected {
+        background: var(--teal);
+        color: white;
+      }
+
+      .calendar-day.has-tasks::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--gold);
+        transform: translateX(-50%);
+      }
+
+      .date-summary {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 800;
+      }
+
+      .timeline-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .selected-date {
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 800;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #fff7e3;
+        color: #805d0f;
+        font-size: 0.82rem;
+        font-weight: 850;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--gold);
+      }
+
+      .empty {
+        display: grid;
+        min-height: 420px;
+        place-items: center;
+        border: 1px dashed #cbd8df;
+        border-radius: 8px;
+        color: var(--muted);
+        text-align: center;
+        padding: 28px;
+      }
+
+      .empty strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 1.35rem;
+      }
+
+      .day-note {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border: 1px solid rgba(12, 143, 134, 0.18);
+        border-radius: 8px;
+        background: rgba(12, 143, 134, 0.08);
+        color: var(--teal-dark);
+        font-weight: 850;
+      }
+
+      .task-list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .history-list {
+        display: grid;
+        gap: 10px;
+        max-height: 260px;
+        overflow: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .history-item {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .history-item strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .history-item span {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 750;
+      }
+
+      .task {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        min-height: 104px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .task.active {
+        border-color: rgba(12, 143, 134, 0.4);
+        box-shadow: 0 16px 38px rgba(12, 143, 134, 0.12);
+      }
+
+      .time-block {
+        display: grid;
+        gap: 4px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .start {
+        font-size: 1.18rem;
+        font-weight: 900;
+      }
+
+      .end {
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .task-main {
+        min-width: 0;
+      }
+
+      .task-title {
+        margin: 0 0 10px;
+        overflow-wrap: anywhere;
+        font-size: 1.08rem;
+        font-weight: 850;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .tag {
+        border-radius: 999px;
+        background: var(--soft);
+        color: #40506a;
+        padding: 5px 9px;
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .tag.active-tag {
+        background: rgba(12, 143, 134, 0.12);
+        color: var(--teal-dark);
+      }
+
+      .bar {
+        width: 100%;
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e7edf0;
+      }
+
+      .fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--teal), var(--gold));
+        transition: width 450ms linear;
+      }
+
+      .countdown {
+        min-width: 112px;
+        text-align: right;
+        font-size: 1.25rem;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .finished {
+        color: var(--coral);
+      }
+
+      .task-side {
+        display: grid;
+        gap: 10px;
+        justify-items: end;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .task-icon {
+        display: inline-grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fbfa;
+        color: #40506a;
+        cursor: pointer;
+        transition:
+          transform 150ms ease,
+          border-color 150ms ease,
+          color 150ms ease,
+          background 150ms ease;
+      }
+
+      .task-icon:hover {
+        transform: translateY(-1px);
+        border-color: rgba(12, 143, 134, 0.28);
+        color: var(--teal-dark);
+        background: #edf5f3;
+      }
+
+      .task-icon.delete:hover {
+        border-color: rgba(255, 111, 97, 0.34);
+        color: #c44539;
+        background: #fff0ee;
+      }
+
+      .task-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.2;
+      }
+
+      @media (max-width: 880px) {
+        header,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          position: static;
+        }
+
+        .clock {
+          min-width: 0;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .shell {
+          width: min(100% - 20px, 1180px);
+          padding-top: 16px;
+        }
+
+        .duration-row,
+        .actions,
+        .task {
+          grid-template-columns: 1fr;
+        }
+
+        .countdown {
+          text-align: left;
+        }
+
+        .task-side {
+          justify-items: start;
+        }
+      }
+    </style>
+  </head>
+  <body class="locked">
+    <section class="login-screen" id="loginScreen">
+      <div class="login-box">
+        <p class="eyebrow">Saved planner</p>
+        <h1>Sign in to your day.</h1>
+        <p class="subtle">
+          Create a local account to keep your calendar, activity history, and
+          active schedule saved in this browser.
+        </p>
+
+        <form id="loginForm">
+          <label>
+            Username
+            <input id="username" type="text" autocomplete="username" required />
+          </label>
+          <label>
+            Password
+            <input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+          <button class="primary" type="submit">Sign in or create account</button>
+          <p class="form-message" id="loginMessage"></p>
+        </form>
+        <p class="login-hint">
+          This is local browser login for your saved sessions. For secure login
+          across devices, connect this app to a hosted backend later.
+        </p>
+      </div>
+    </section>
+
+    <main class="shell app" id="app" hidden>
+      <header>
+        <section>
+          <p class="eyebrow">Pacific time planner</p>
+          <h1>Build your productive day.</h1>
+        </section>
+        <section class="header-actions">
+          <aside class="clock" aria-label="Current Pacific time">
+            <p class="clock-label">Current time</p>
+            <div class="clock-time" id="clock">--:-- --</div>
+          </aside>
+          <div class="user-row">
+            <span id="activeUser">Signed in</span>
+            <button class="ghost" id="logoutButton" type="button">Log out</button>
+          </div>
+        </section>
+      </header>
+
+      <section class="grid">
+        <div class="side-stack">
+          <aside class="panel">
+            <h2>Add a task</h2>
+            <p class="subtle">
+              Each task starts when the previous one ends, with a live timer for
+              the task currently in motion.
+            </p>
+
+            <form id="taskForm">
+              <label>
+                Task?
+                <input
+                  id="taskName"
+                  type="text"
+                  autocomplete="off"
+                  required
+                />
+              </label>
+
+              <div class="duration-row">
+                <label>
+                  Duration?
+                  <input
+                    id="taskDuration"
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="45"
+                    required
+                  />
+                </label>
+                <button class="secondary" type="submit">Enter</button>
+              </div>
+
+              <div class="quick" aria-label="Quick duration buttons">
+                <button type="button" data-minutes="15">15 min</button>
+                <button type="button" data-minutes="30">30 min</button>
+                <button type="button" data-minutes="45">45 min</button>
+              </div>
+
+              <button class="primary" type="button" id="finishDay">
+                No more tasks
+              </button>
+            </form>
+          </aside>
+
+          <aside class="calendar-panel">
+            <div class="calendar-top">
+              <h2>Calendar</h2>
+              <div class="calendar-controls">
+                <button class="icon-btn" id="prevMonth" type="button" aria-label="Previous month">‹</button>
+                <button class="icon-btn" id="nextMonth" type="button" aria-label="Next month">›</button>
+              </div>
+            </div>
+            <div class="month-title" id="monthTitle">Month</div>
+            <div class="weekdays" aria-hidden="true">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <p class="date-summary" id="dateSummary"></p>
+          </aside>
+
+          <aside class="history-panel">
+            <div class="section-top">
+              <h2>Activity history</h2>
+              <button class="ghost" id="todayButton" type="button">Today</button>
+            </div>
+            <ol class="history-list" id="historyList"></ol>
+          </aside>
+        </div>
+
+        <div class="workspace">
+          <section class="timeline">
+            <div class="timeline-top">
+              <div>
+                <h2>Timeline</h2>
+                <div class="selected-date" id="selectedDateLabel">Today</div>
+              </div>
+              <span class="status-pill"><span class="dot"></span><span id="status">Ready</span></span>
+            </div>
+
+            <div id="empty" class="empty">
+              <p>
+                <strong>Enjoy your productive day.</strong>
+                Add a task when you are ready to begin.
+              </p>
+            </div>
+
+            <ol class="task-list" id="taskList"></ol>
+            <div class="day-note" id="dayNote" hidden>
+              Enjoy your productive day.
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const storageKey = "productiveDayPlanner:v2";
+      const sessionKey = "productiveDayPlanner:activeUser";
+      const app = document.querySelector("#app");
+      const loginScreen = document.querySelector("#loginScreen");
+      const loginForm = document.querySelector("#loginForm");
+      const loginMessage = document.querySelector("#loginMessage");
+      const usernameInput = document.querySelector("#username");
+      const passwordInput = document.querySelector("#password");
+      const activeUser = document.querySelector("#activeUser");
+      const logoutButton = document.querySelector("#logoutButton");
+      const taskForm = document.querySelector("#taskForm");
+      const taskName = document.querySelector("#taskName");
+      const taskDuration = document.querySelector("#taskDuration");
+      const taskList = document.querySelector("#taskList");
+      const clock = document.querySelector("#clock");
+      const empty = document.querySelector("#empty");
+      const statusText = document.querySelector("#status");
+      const finishDay = document.querySelector("#finishDay");
+      const dayNote = document.querySelector("#dayNote");
+      const quickButtons = document.querySelectorAll("[data-minutes]");
+      const calendarGrid = document.querySelector("#calendarGrid");
+      const monthTitle = document.querySelector("#monthTitle");
+      const prevMonth = document.querySelector("#prevMonth");
+      const nextMonth = document.querySelector("#nextMonth");
+      const todayButton = document.querySelector("#todayButton");
+      const historyList = document.querySelector("#historyList");
+      const dateSummary = document.querySelector("#dateSummary");
+      const selectedDateLabel = document.querySelector("#selectedDateLabel");
+
+      let database = loadDatabase();
+      let currentUser = localStorage.getItem(sessionKey);
+      let selectedDate = dateKey(new Date());
+      let calendarCursor = startOfMonth(new Date());
+
+      const pacificFormatter = new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/Los_Angeles",
+      });
+      const dateLabelFormatter = new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      const monthFormatter = new Intl.DateTimeFormat("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+
+      function loadDatabase() {
+        try {
+          return JSON.parse(localStorage.getItem(storageKey)) || { users: {} };
+        } catch {
+          return { users: {} };
+        }
+      }
+
+      function saveDatabase() {
+        localStorage.setItem(storageKey, JSON.stringify(database));
+      }
+
+      function userData() {
+        if (!database.users[currentUser]) return null;
+        database.users[currentUser].days ||= {};
+        return database.users[currentUser];
+      }
+
+      function dayData(key = selectedDate) {
+        const user = userData();
+        if (!user.days[key]) {
+          user.days[key] = { tasks: [], doneAdding: false };
+        }
+        return user.days[key];
+      }
+
+      async function hashPassword(password) {
+        if (!crypto.subtle) {
+          let hash = 5381;
+          for (let index = 0; index < password.length; index += 1) {
+            hash = (hash * 33) ^ password.charCodeAt(index);
+          }
+          return `local-${(hash >>> 0).toString(16)}`;
+        }
+
+        const data = new TextEncoder().encode(password);
+        const hash = await crypto.subtle.digest("SHA-256", data);
+        return Array.from(new Uint8Array(hash))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      function showApp() {
+        loginScreen.hidden = true;
+        app.hidden = false;
+        document.body.classList.remove("locked");
+        activeUser.textContent = `Signed in as ${currentUser}`;
+        render();
+      }
+
+      function showLogin() {
+        loginScreen.hidden = false;
+        app.hidden = true;
+        document.body.classList.add("locked");
+        usernameInput.focus();
+      }
+
+      function now() {
+        return new Date();
+      }
+
+      function dateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function dateFromKey(key) {
+        const [year, month, day] = key.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      }
+
+      function startOfMonth(date) {
+        return new Date(date.getFullYear(), date.getMonth(), 1);
+      }
+
+      function isToday(key) {
+        return key === dateKey(new Date());
+      }
+
+      function formatTime(date) {
+        return pacificFormatter.format(date).replace(" ", "").toLowerCase();
+      }
+
+      function formatDuration(totalSeconds) {
+        const seconds = Math.max(0, Math.ceil(totalSeconds));
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+        }
+
+        return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+      }
+
+      function taskStatus(task, current) {
+        const startAt = new Date(task.startAt);
+        const endAt = new Date(task.endAt);
+
+        if (current < startAt) return "queued";
+        if (current >= endAt) return "finished";
+        return "active";
+      }
+
+      function firstStartTime() {
+        if (isToday(selectedDate)) return now();
+        const date = dateFromKey(selectedDate);
+        date.setHours(9, 0, 0, 0);
+        return date;
+      }
+
+      function rescheduleDay(day) {
+        let nextStart = null;
+
+        day.tasks.forEach((task, index) => {
+          const startAt = index === 0 ? firstStartTime() : nextStart;
+          const endAt = new Date(startAt.getTime() + task.minutes * 60 * 1000);
+          task.startAt = startAt.toISOString();
+          task.endAt = endAt.toISOString();
+          nextStart = endAt;
+        });
+      }
+
+      function addTask(name, minutes) {
+        const day = dayData();
+        const durationMs = minutes * 60 * 1000;
+        const lastTask = day.tasks.at(-1);
+        const startAt = lastTask ? new Date(lastTask.endAt) : firstStartTime();
+        const endAt = new Date(startAt.getTime() + durationMs);
+
+        day.tasks.push({
+          id: crypto.randomUUID(),
+          name,
+          minutes,
+          createdAt: now().toISOString(),
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+        });
+
+        day.doneAdding = false;
+        saveDatabase();
+        render();
+      }
+
+      function deleteTask(taskId) {
+        const day = dayData();
+        day.tasks = day.tasks.filter((task) => task.id !== taskId);
+        rescheduleDay(day);
+        saveDatabase();
+        render();
+      }
+
+      function editTask(taskId) {
+        const day = dayData();
+        const task = day.tasks.find((item) => item.id === taskId);
+        if (!task) return;
+
+        const newName = prompt("Edit task", task.name);
+        if (newName === null) return;
+
+        const cleanName = newName.trim();
+        if (!cleanName) return;
+
+        const newDuration = prompt("Edit duration in minutes", String(task.minutes));
+        if (newDuration === null) return;
+
+        const minutes = Math.round(Number(newDuration));
+        if (!Number.isFinite(minutes) || minutes < 1) return;
+
+        task.name = cleanName;
+        task.minutes = minutes;
+        task.updatedAt = now().toISOString();
+        rescheduleDay(day);
+        saveDatabase();
+        render();
+      }
+
+      function render() {
+        if (!currentUser || !userData()) return;
+
+        const day = dayData();
+        const tasks = day.tasks;
+        const current = now();
+        clock.textContent = formatTime(current);
+        empty.hidden = tasks.length > 0;
+        dayNote.hidden = !day.doneAdding || tasks.length === 0;
+        selectedDateLabel.textContent = dateLabelFormatter.format(dateFromKey(selectedDate));
+
+        taskList.innerHTML = tasks.map((task) => renderTask(task, current)).join("");
+        renderStatus(tasks, current);
+        renderCalendar();
+        renderHistory();
+
+        dateSummary.textContent =
+          tasks.length === 0
+            ? "No activities saved for this day."
+            : `${tasks.length} saved ${tasks.length === 1 ? "activity" : "activities"} for this day.`;
+      }
+
+      function renderTask(task, current) {
+        const startAt = new Date(task.startAt);
+        const endAt = new Date(task.endAt);
+        const state = taskStatus(task, current);
+        const total = endAt - startAt;
+        const elapsed = current - startAt;
+        const progress =
+          state === "finished"
+            ? 100
+            : state === "queued"
+              ? 0
+              : Math.min(100, Math.max(0, (elapsed / total) * 100));
+        const label =
+          state === "active"
+            ? "In progress"
+            : state === "queued"
+              ? "Starts later"
+              : "Complete";
+        const remaining =
+          state === "queued"
+            ? `Starts in ${formatDuration((startAt - current) / 1000)}`
+            : state === "finished"
+              ? "Done"
+              : formatDuration((endAt - current) / 1000);
+
+        return `
+          <li class="task ${state === "active" ? "active" : ""}">
+            <div class="time-block">
+              <span class="start">${formatTime(startAt)}</span>
+              <span class="end">ends ${formatTime(endAt)}</span>
+            </div>
+            <div class="task-main">
+              <p class="task-title">${escapeHtml(task.name)}</p>
+              <div class="meta">
+                <span class="tag ${state === "active" ? "active-tag" : ""}">${label}</span>
+                <span class="tag">${task.minutes} min</span>
+              </div>
+              <div class="bar" aria-label="${label} progress">
+                <div class="fill" style="width: ${progress}%"></div>
+              </div>
+            </div>
+            <div class="task-side">
+              <div class="countdown ${state === "finished" ? "finished" : ""}">${remaining}</div>
+              <div class="task-actions" aria-label="Task actions">
+                <button class="task-icon" type="button" data-action="edit" data-task-id="${task.id}" aria-label="Edit ${escapeHtml(task.name)}" title="Edit task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                </button>
+                <button class="task-icon delete" type="button" data-action="delete" data-task-id="${task.id}" aria-label="Delete ${escapeHtml(task.name)}" title="Delete task">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4h8v2" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v5" />
+                    <path d="M14 11v5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </li>
+        `;
+      }
+
+      function renderStatus(tasks, current) {
+        const active = tasks.find((task) => taskStatus(task, current) === "active");
+        const queued = tasks.find((task) => taskStatus(task, current) === "queued");
+
+        if (active) {
+          statusText.textContent = `Now: ${active.name}`;
+        } else if (queued) {
+          statusText.textContent = `Next: ${queued.name}`;
+        } else if (tasks.length > 0) {
+          statusText.textContent = "All complete";
+        } else {
+          statusText.textContent = "Ready";
+        }
+      }
+
+      function renderCalendar() {
+        const user = userData();
+        const monthStart = startOfMonth(calendarCursor);
+        const firstCell = new Date(monthStart);
+        firstCell.setDate(monthStart.getDate() - monthStart.getDay());
+        monthTitle.textContent = monthFormatter.format(monthStart);
+
+        calendarGrid.innerHTML = Array.from({ length: 42 }, (_, index) => {
+          const cellDate = new Date(firstCell);
+          cellDate.setDate(firstCell.getDate() + index);
+          const key = dateKey(cellDate);
+          const hasTasks = (user.days[key]?.tasks.length || 0) > 0;
+          const classes = [
+            "calendar-day",
+            cellDate.getMonth() !== monthStart.getMonth() ? "muted" : "",
+            key === selectedDate ? "selected" : "",
+            isToday(key) ? "today" : "",
+            hasTasks ? "has-tasks" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return `<button class="${classes}" type="button" data-date="${key}">${cellDate.getDate()}</button>`;
+        }).join("");
+      }
+
+      function renderHistory() {
+        const entries = Object.entries(userData().days)
+          .flatMap(([key, day]) =>
+            day.tasks.map((task) => ({
+              key,
+              task,
+              startAt: new Date(task.startAt),
+            })),
+          )
+          .sort((a, b) => b.startAt - a.startAt)
+          .slice(0, 12);
+
+        historyList.innerHTML =
+          entries.length === 0
+            ? `<li class="history-item"><strong>No activities yet</strong><span>Your saved tasks will appear here.</span></li>`
+            : entries
+                .map(
+                  ({ key, task, startAt }) => `
+                    <li class="history-item">
+                      <strong>${escapeHtml(task.name)}</strong>
+                      <span>${dateLabelFormatter.format(dateFromKey(key))} · ${formatTime(startAt)} · ${task.minutes} min</span>
+                    </li>
+                  `,
+                )
+                .join("");
+      }
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>"']/g, (character) => {
+          const replacements = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          };
+          return replacements[character];
+        });
+      }
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginMessage.textContent = "";
+        const username = usernameInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+
+        if (!username || !password) return;
+
+        const passwordHash = await hashPassword(password);
+        const existing = database.users[username];
+
+        if (existing && existing.passwordHash !== passwordHash) {
+          loginMessage.textContent = "That password does not match this account.";
+          return;
+        }
+
+        if (!existing) {
+          database.users[username] = {
+            passwordHash,
+            createdAt: now().toISOString(),
+            days: {},
+          };
+          saveDatabase();
+        }
+
+        currentUser = username;
+        localStorage.setItem(sessionKey, username);
+        passwordInput.value = "";
+        showApp();
+      });
+
+      logoutButton.addEventListener("click", () => {
+        currentUser = null;
+        localStorage.removeItem(sessionKey);
+        showLogin();
+      });
+
+      taskForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = taskName.value.trim();
+        const minutes = Number(taskDuration.value);
+
+        if (!name || !Number.isFinite(minutes) || minutes < 1) return;
+
+        addTask(name, Math.round(minutes));
+        taskForm.reset();
+        taskName.focus();
+      });
+
+      taskList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action][data-task-id]");
+        if (!button) return;
+
+        const { action, taskId } = button.dataset;
+
+        if (action === "edit") {
+          editTask(taskId);
+          return;
+        }
+
+        if (action === "delete" && confirm("Delete this task and move the following tasks up?")) {
+          deleteTask(taskId);
+        }
+      });
+
+      quickButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          taskDuration.value = button.dataset.minutes;
+          taskName.focus();
+        });
+      });
+
+      finishDay.addEventListener("click", () => {
+        const day = dayData();
+        day.doneAdding = true;
+
+        if (day.tasks.length === 0) {
+          empty.hidden = false;
+          empty.querySelector("strong").textContent = "Enjoy your productive day.";
+          empty.querySelector("p").lastChild.textContent = " Add a task if your plans change.";
+        }
+
+        taskName.value = "";
+        taskDuration.value = "";
+        saveDatabase();
+        render();
+      });
+
+      calendarGrid.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-date]");
+        if (!button) return;
+        selectedDate = button.dataset.date;
+        calendarCursor = startOfMonth(dateFromKey(selectedDate));
+        render();
+      });
+
+      prevMonth.addEventListener("click", () => {
+        calendarCursor.setMonth(calendarCursor.getMonth() - 1);
+        calendarCursor = startOfMonth(calendarCursor);
+        render();
+      });
+
+      nextMonth.addEventListener("click", () => {
+        calendarCursor.setMonth(calendarCursor.getMonth() + 1);
+        calendarCursor = startOfMonth(calendarCursor);
+        render();
+      });
+
+      todayButton.addEventListener("click", () => {
+        selectedDate = dateKey(new Date());
+        calendarCursor = startOfMonth(new Date());
+        render();
+      });
+
+      if (currentUser && database.users[currentUser]) {
+        showApp();
+      } else {
+        currentUser = null;
+        localStorage.removeItem(sessionKey);
+        showLogin();
+      }
+
+      setInterval(render, 1000);
+    </script>
+  </body>
+</html>
