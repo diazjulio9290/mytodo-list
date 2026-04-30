@@ -967,10 +967,17 @@
       }
 
       function dateKey(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
+        const parts = new Intl.DateTimeFormat("en-US", {
+          day: "2-digit",
+          month: "2-digit",
+          timeZone: "America/Los_Angeles",
+          year: "numeric",
+        }).formatToParts(date);
+        const dateParts = Object.fromEntries(
+          parts.map((part) => [part.type, part.value]),
+        );
+
+        return `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
       }
 
       function dateFromKey(key) {
@@ -980,6 +987,11 @@
 
       function startOfMonth(date) {
         return new Date(date.getFullYear(), date.getMonth(), 1);
+      }
+
+      function selectToday() {
+        selectedDate = dateKey(new Date());
+        calendarCursor = startOfMonth(dateFromKey(selectedDate));
       }
 
       function isToday(key) {
@@ -1405,6 +1417,7 @@
         session = data.session;
 
         passwordInput.value = "";
+        selectToday();
         showApp();
         await loadSelectedDateData();
       }
@@ -1550,8 +1563,7 @@
       });
 
       todayButton.addEventListener("click", async () => {
-        selectedDate = dateKey(new Date());
-        calendarCursor = startOfMonth(new Date());
+        selectToday();
         await loadSelectedDateData();
       });
 
@@ -1563,6 +1575,7 @@
         session = data.session;
 
         if (session) {
+          selectToday();
           showApp();
           await loadSelectedDateData();
         } else {
