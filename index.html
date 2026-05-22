@@ -248,7 +248,7 @@
 
       .auth-actions {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 10px;
       }
 
@@ -729,7 +729,7 @@
         <h1>Sign in to your day.</h1>
         <p class="subtle">
           Create an account to keep your calendar, activity history, and active
-          schedule saved with Supabase.
+          schedule saved with Neon.
         </p>
 
         <form id="loginForm">
@@ -751,11 +751,14 @@
             <button class="secondary" id="createAccountButton" type="button">
               Create account
             </button>
+            <button class="secondary" id="resetPasswordButton" type="button">
+              Reset password
+            </button>
           </div>
           <p class="form-message" id="loginMessage"></p>
         </form>
         <p class="login-hint">
-          Your account and tasks sync through Supabase Auth and Postgres.
+          Your account and tasks sync through Neon Postgres.
         </p>
       </div>
     </section>
@@ -884,20 +887,31 @@
       </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      const supabaseUrl = "https://jskklrwexipijoxqobvh.supabase.co";
-      const supabaseAnonKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impza2tscndleGlwaWpveHFvYnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDY4NjEsImV4cCI6MjA5Mjc4Mjg2MX0.vLjQ1pdw3m-RigCaLGTZulmx5skXeoMpcl6HgxqyiY0";
-      const supabaseClient = window.supabase.createClient(
-        supabaseUrl,
-        supabaseAnonKey,
-      );
+      async function apiRequest(path, options = {}) {
+        const response = await fetch(path, {
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Request failed.");
+        }
+
+        return payload;
+      }
+
       const app = document.querySelector("#app");
       const loginScreen = document.querySelector("#loginScreen");
       const loginForm = document.querySelector("#loginForm");
       const loginMessage = document.querySelector("#loginMessage");
       const createAccountButton = document.querySelector("#createAccountButton");
+      const resetPasswordButton = document.querySelector("#resetPasswordButton");
       const usernameInput = document.querySelector("#username");
       const passwordInput = document.querySelector("#password");
       const activeUser = document.querySelector("#activeUser");
@@ -1067,32 +1081,19 @@
         isLoading = true;
         render();
 
-        const [{ data: taskRows, error: taskError }, { data: dateRows }, { data: historyRows }] =
-          await Promise.all([
-            supabaseClient
-              .from("tasks")
-              .select("*")
-              .eq("task_date", selectedDate)
-              .order("sort_order", { ascending: true })
-              .order("start_at", { ascending: true }),
-            supabaseClient.from("tasks").select("task_date"),
-            supabaseClient
-              .from("tasks")
-              .select("*")
-              .order("start_at", { ascending: false })
-              .limit(20),
-          ]);
-
-        if (taskError) {
+        try {
+          const data = await apiRequest(`/api/tasks?date=${encodeURIComponent(selectedDate)}`);
+          tasks = (data.tasks || []).map(normalizeTask);
+          activityDates = new Set((data.dates || []).map((row) => row.task_date));
+          historyEntries = (data.history || []).map(normalizeTask);
+        } catch (error) {
           loginMessage.textContent =
-            "Could not load tasks. Check that the Supabase tasks table and policies are created.";
+            "Could not load tasks. Check that the Neon database is configured.";
           tasks = [];
-        } else {
-          tasks = (taskRows || []).map(normalizeTask);
+          activityDates = new Set();
+          historyEntries = [];
         }
 
-        activityDates = new Set((dateRows || []).map((row) => row.task_date));
-        historyEntries = (historyRows || []).map(normalizeTask);
         isLoading = false;
         render();
       }
@@ -1102,24 +1103,20 @@
         rescheduleDay(tasks, originalFirstStart);
 
         const updates = tasks.map((task) =>
-          supabaseClient
-            .from("tasks")
-            .update({
+          apiRequest(`/api/tasks/${task.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
               task_name: task.name,
               duration_minutes: task.minutes,
               start_at: task.start_at,
               end_at: task.end_at,
               sort_order: task.sort_order,
               done_adding: task.doneAdding,
-              updated_at: now().toISOString(),
-            })
-            .eq("id", task.id)
-            .eq("user_id", session.user.id),
+            }),
+          }),
         );
 
         const results = await Promise.all(updates);
-        const failed = results.find((result) => result.error);
-        if (failed) throw failed.error;
       }
 
       async function addTask(name, minutes) {
@@ -1128,9 +1125,10 @@
         const startAt = lastTask ? new Date(lastTask.endAt) : firstStartTime();
         const endAt = new Date(startAt.getTime() + durationMs);
 
-        const { data, error } = await supabaseClient
-          .from("tasks")
-          .insert({
+        try {
+          const data = await apiRequest("/api/tasks", {
+            method: "POST",
+            body: JSON.stringify({
             user_id: session.user.id,
             task_name: name,
             duration_minutes: minutes,
@@ -1139,27 +1137,21 @@
             end_at: endAt.toISOString(),
             sort_order: tasks.length,
             done_adding: false,
-          })
-          .select()
-          .single();
+            }),
+          });
 
-        if (error) {
+          tasks.push(normalizeTask(data.task));
+          await loadSelectedDateData();
+        } catch (error) {
           alert(error.message);
           return;
         }
-
-        tasks.push(normalizeTask(data));
-        await loadSelectedDateData();
       }
 
       async function deleteTask(taskId) {
-        const { error } = await supabaseClient
-          .from("tasks")
-          .delete()
-          .eq("id", taskId)
-          .eq("user_id", session.user.id);
-
-        if (error) {
+        try {
+          await apiRequest(`/api/tasks/${taskId}`, { method: "DELETE" });
+        } catch (error) {
           alert(error.message);
           return;
         }
@@ -1178,13 +1170,11 @@
         const confirmed = confirm(`Reset all tasks for ${label}?`);
         if (!confirmed) return;
 
-        const { error } = await supabaseClient
-          .from("tasks")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("task_date", selectedDate);
-
-        if (error) {
+        try {
+          await apiRequest(`/api/tasks?date=${encodeURIComponent(selectedDate)}`, {
+            method: "DELETE",
+          });
+        } catch (error) {
           alert(error.message);
           return;
         }
@@ -1200,16 +1190,13 @@
         if (!confirmed) return;
 
         const secondConfirmed = confirm(
-          "This permanently deletes your task history from Supabase. Continue?",
+          "This permanently deletes your task history from Neon. Continue?",
         );
         if (!secondConfirmed) return;
 
-        const { error } = await supabaseClient
-          .from("tasks")
-          .delete()
-          .eq("user_id", session.user.id);
-
-        if (error) {
+        try {
+          await apiRequest("/api/tasks", { method: "DELETE" });
+        } catch (error) {
           alert(error.message);
           return;
         }
@@ -1413,7 +1400,7 @@
       }
 
       async function completeAuth() {
-        const { data } = await supabaseClient.auth.getSession();
+        const data = await apiRequest("/api/session");
         session = data.session;
 
         passwordInput.value = "";
@@ -1440,13 +1427,14 @@
         const credentials = readCredentials();
         if (!credentials) return;
 
-        const signIn = await supabaseClient.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password,
-        });
-
-        if (signIn.error) {
-          loginMessage.textContent = signIn.error.message;
+        try {
+          const signIn = await apiRequest("/api/signin", {
+            method: "POST",
+            body: JSON.stringify(credentials),
+          });
+          session = signIn.session;
+        } catch (error) {
+          loginMessage.textContent = error.message;
           return;
         }
 
@@ -1457,19 +1445,48 @@
         const credentials = readCredentials();
         if (!credentials) return;
 
-        const signUp = await supabaseClient.auth.signUp({
-          email: credentials.email,
-          password: credentials.password,
-        });
-
-        if (signUp.error) {
-          loginMessage.textContent = signUp.error.message;
+        try {
+          const signUp = await apiRequest("/api/signup", {
+            method: "POST",
+            body: JSON.stringify(credentials),
+          });
+          session = signUp.session;
+        } catch (error) {
+          loginMessage.textContent = error.message;
           return;
         }
 
-        if (!signUp.data.session) {
-          loginMessage.textContent =
-            "Account created. Check your email to confirm, then sign in.";
+        await completeAuth();
+      });
+
+      resetPasswordButton.addEventListener("click", async () => {
+        loginMessage.textContent = "";
+        const email = usernameInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+          loginMessage.textContent = "Enter your email and new password.";
+          return;
+        }
+
+        if (password.length < 8) {
+          loginMessage.textContent = "Use at least 8 characters.";
+          return;
+        }
+
+        const confirmed = confirm(
+          `Reset the password for ${email} and sign in with the new password?`,
+        );
+        if (!confirmed) return;
+
+        try {
+          const reset = await apiRequest("/api/reset-password", {
+            method: "POST",
+            body: JSON.stringify({ email, password }),
+          });
+          session = reset.session;
+        } catch (error) {
+          loginMessage.textContent = error.message;
           return;
         }
 
@@ -1477,7 +1494,7 @@
       });
 
       logoutButton.addEventListener("click", async () => {
-        await supabaseClient.auth.signOut();
+        await apiRequest("/api/signout", { method: "POST" });
         session = null;
         tasks = [];
         historyEntries = [];
@@ -1571,7 +1588,7 @@
       resetAllButton.addEventListener("click", resetAllTasks);
 
       async function init() {
-        const { data } = await supabaseClient.auth.getSession();
+        const data = await apiRequest("/api/session");
         session = data.session;
 
         if (session) {
