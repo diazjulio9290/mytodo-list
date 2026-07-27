@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import dotenv from "dotenv";
 import express from "express";
 import pg from "pg";
+import { rescheduleTasks } from "./schedule.js";
 
 dotenv.config();
 
@@ -334,6 +335,87 @@ app.post("/api/tasks", requireUser, async (req, res, next) => {
     res.status(201).json({ task: rows[0] });
   } catch (error) {
     next(error);
+  }
+});
+
+app.put("/api/tasks/reorder", requireUser, async (req, res, next) => {
+  const taskDate = String(req.body.task_date || "");
+  const taskIds = Array.isArray(req.body.task_ids)
+    ? req.body.task_ids.map((id) => String(id))
+    : [];
+  const anchorStart = new Date(req.body.anchor_start);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(taskDate)) {
+    return res.status(400).json({ error: "A valid task date is required." });
+  }
+
+  if (
+    taskIds.length === 0 ||
+    new Set(taskIds).size !== taskIds.length ||
+    Number.isNaN(anchorStart.getTime())
+  ) {
+    return res.status(400).json({ error: "A valid task order and start time are required." });
+  }
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    await client.query("begin");
+    const { rows } = await client.query(
+      `select ${taskColumns} from tasks
+       where user_id = $1 and task_date = $2
+       order by sort_order asc, start_at asc
+       for update`,
+      [req.user.id, taskDate],
+    );
+
+    const tasksById = new Map(rows.map((task) => [String(task.id), task]));
+    if (
+      rows.length !== taskIds.length ||
+      taskIds.some((taskId) => !tasksById.has(taskId))
+    ) {
+      await client.query("rollback");
+      return res.status(409).json({
+        error: "The task list changed. Refresh the day and try the move again.",
+      });
+    }
+
+    const orderedTasks = taskIds.map((taskId) => tasksById.get(taskId));
+    const scheduledTasks = rescheduleTasks(orderedTasks, anchorStart);
+
+    for (const task of scheduledTasks) {
+      await client.query(
+        `update tasks
+         set start_at = $1,
+             end_at = $2,
+             sort_order = $3,
+             updated_at = now()
+         where id = $4 and user_id = $5`,
+        [
+          task.start_at,
+          task.end_at,
+          task.sort_order,
+          task.id,
+          req.user.id,
+        ],
+      );
+    }
+
+    const reorderedResult = await client.query(
+      `select ${taskColumns} from tasks
+       where user_id = $1 and task_date = $2
+       order by sort_order asc, start_at asc`,
+      [req.user.id, taskDate],
+    );
+
+    await client.query("commit");
+    res.json({ tasks: reorderedResult.rows });
+  } catch (error) {
+    await client?.query("rollback").catch(() => {});
+    next(error);
+  } finally {
+    client?.release();
   }
 });
 
