@@ -690,6 +690,68 @@
         stroke-width: 2.2;
       }
 
+      .task.dragging {
+        opacity: 0.45;
+        transform: scale(0.99);
+      }
+
+      .task.drop-before {
+        box-shadow:
+          0 -4px 0 var(--gold),
+          0 12px 26px rgba(28, 52, 47, 0.07);
+      }
+
+      .task.drop-after {
+        box-shadow:
+          0 4px 0 var(--gold),
+          0 12px 26px rgba(28, 52, 47, 0.07);
+      }
+
+      .task-icon.drag-handle {
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .task-icon.drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .task-icon:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .reorder-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: -8px 0 14px;
+        color: #71817c;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .reorder-hint svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        stroke-width: 2;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        margin: -1px;
+        padding: 0;
+        border: 0;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+
       @media (max-width: 880px) {
         header,
         .grid {
@@ -1771,6 +1833,18 @@
         box-shadow: 0 15px 34px rgba(22, 124, 114, 0.1);
       }
 
+      .task.drop-before {
+        box-shadow:
+          0 -4px 0 var(--gold),
+          0 12px 26px rgba(28, 52, 47, 0.07);
+      }
+
+      .task.drop-after {
+        box-shadow:
+          0 4px 0 var(--gold),
+          0 12px 26px rgba(28, 52, 47, 0.07);
+      }
+
       .task.active::before {
         background: linear-gradient(to bottom, var(--teal), var(--gold));
       }
@@ -2363,6 +2437,14 @@
               <span class="status-pill"><span class="dot"></span><span id="status">Ready</span></span>
             </div>
 
+            <p class="reorder-hint" id="reorderHint" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
+              </svg>
+              Drag a task to a new position. Its time and every following time update automatically.
+            </p>
+            <p class="sr-only" id="reorderAnnouncement" aria-live="polite"></p>
+
             <div id="empty" class="empty">
               <div class="empty-content">
                 <span class="empty-orbit" aria-hidden="true">
@@ -2385,7 +2467,9 @@
       </section>
     </main>
 
-    <script>
+    <script type="module">
+      import { reorderAnchor, reorderTasks, rescheduleTasks } from "/schedule.js";
+
       async function apiRequest(path, options = {}) {
         const response = await fetch(path, {
           credentials: "same-origin",
@@ -2434,6 +2518,8 @@
       const historyList = document.querySelector("#historyList");
       const dateSummary = document.querySelector("#dateSummary");
       const selectedDateLabel = document.querySelector("#selectedDateLabel");
+      const reorderHint = document.querySelector("#reorderHint");
+      const reorderAnnouncement = document.querySelector("#reorderAnnouncement");
 
       let session = null;
       let tasks = [];
@@ -2442,6 +2528,8 @@
       let selectedDate = dateKey(new Date());
       let calendarCursor = startOfMonth(new Date());
       let isLoading = false;
+      let draggedTaskId = null;
+      let reorderInFlight = false;
 
       const pacificFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
@@ -2559,19 +2647,9 @@
       }
 
       function rescheduleDay(day, anchorStart = null) {
-        let nextStart = null;
         const firstStart = anchorStart || firstStartTime();
-
-        day.forEach((task, index) => {
-          const startAt = index === 0 ? firstStart : nextStart;
-          const endAt = new Date(startAt.getTime() + task.minutes * 60 * 1000);
-          task.start_at = startAt.toISOString();
-          task.end_at = endAt.toISOString();
-          task.startAt = task.start_at;
-          task.endAt = task.end_at;
-          task.sort_order = index;
-          nextStart = endAt;
-        });
+        const scheduled = rescheduleTasks(day, firstStart);
+        day.splice(0, day.length, ...scheduled);
       }
 
       async function loadSelectedDateData() {
@@ -2615,6 +2693,59 @@
         );
 
         const results = await Promise.all(updates);
+      }
+
+      async function moveTask(taskId, targetTaskId, position) {
+        if (reorderInFlight || tasks.length < 2) return;
+
+        const originalTasks = tasks.map((task) => ({ ...task }));
+        let reordered;
+
+        try {
+          reordered = reorderTasks(originalTasks, taskId, targetTaskId, position);
+        } catch (error) {
+          alert(error.message);
+          return;
+        }
+
+        if (reordered.every((task, index) => task.id === originalTasks[index].id)) {
+          return;
+        }
+
+        const anchorStart = reorderAnchor(originalTasks, taskId, reordered);
+        tasks = rescheduleTasks(reordered, anchorStart);
+        reorderInFlight = true;
+        render();
+
+        try {
+          const data = await apiRequest("/api/tasks/reorder", {
+            method: "PUT",
+            body: JSON.stringify({
+              task_date: selectedDate,
+              task_ids: tasks.map((task) => task.id),
+              anchor_start: anchorStart,
+            }),
+          });
+
+          tasks = (data.tasks || []).map(normalizeTask);
+          const movedTask = tasks.find((task) => String(task.id) === String(taskId));
+          reorderAnnouncement.textContent = movedTask
+            ? `${movedTask.name} moved to ${formatTime(new Date(movedTask.startAt))}. Following task times were updated.`
+            : "Task order and times updated.";
+          await loadSelectedDateData();
+        } catch (error) {
+          tasks = originalTasks;
+          alert(error.message);
+        } finally {
+          reorderInFlight = false;
+          render();
+        }
+      }
+
+      function clearDropIndicators() {
+        taskList
+          .querySelectorAll(".drop-before, .drop-after")
+          .forEach((task) => task.classList.remove("drop-before", "drop-after"));
       }
 
       async function addTask(name, minutes) {
@@ -2742,11 +2873,14 @@
 
         empty.hidden = tasks.length > 0;
         dayNote.hidden = !selectedDoneAdding() || tasks.length === 0;
+        reorderHint.hidden = tasks.length < 2;
         selectedDateLabel.textContent = dateLabelFormatter.format(dateFromKey(selectedDate));
 
-        taskList.innerHTML = isLoading
-          ? `<li class="history-item"><strong>Loading timeline</strong><span>Fetching your saved tasks.</span></li>`
-          : tasks.map((task) => renderTask(task, current)).join("");
+        if (!draggedTaskId) {
+          taskList.innerHTML = isLoading
+            ? `<li class="history-item"><strong>Loading timeline</strong><span>Fetching your saved tasks.</span></li>`
+            : tasks.map((task) => renderTask(task, current)).join("");
+        }
         renderStatus(tasks, current);
         renderCalendar();
         renderHistory();
@@ -2774,16 +2908,18 @@
             ? "In progress"
             : state === "queued"
               ? "Starts later"
-              : "Complete";
+              : "Time passed";
         const remaining =
           state === "queued"
             ? `Starts in ${formatDuration((startAt - current) / 1000)}`
             : state === "finished"
-              ? "Done"
+              ? "Move to reschedule"
               : formatDuration((endAt - current) / 1000);
+        const taskId = escapeHtml(String(task.id));
+        const isLastTask = String(tasks.at(-1)?.id) === String(task.id);
 
         return `
-          <li class="task ${state === "active" ? "active" : ""}">
+          <li class="task ${state === "active" ? "active" : ""}" data-task-id="${taskId}">
             <div class="time-block">
               <span class="start">${formatTime(startAt)}</span>
               <span class="end">ends ${formatTime(endAt)}</span>
@@ -2801,13 +2937,25 @@
             <div class="task-side">
               <div class="countdown ${state === "finished" ? "finished" : ""}">${remaining}</div>
               <div class="task-actions" aria-label="Task actions">
-                <button class="task-icon" type="button" data-action="edit" data-task-id="${task.id}" aria-label="Edit ${escapeHtml(task.name)}" title="Edit task">
+                <span class="task-icon drag-handle" data-drag-handle="true" aria-hidden="true" title="Drag to reorder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
+                  </svg>
+                </span>
+                <button class="task-icon" type="button" data-action="move-end" data-task-id="${taskId}" aria-label="Move ${escapeHtml(task.name)} to the end" title="Move to end" ${isLastTask ? "disabled" : ""}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M12 4v12" />
+                    <path d="m7 11 5 5 5-5" />
+                    <path d="M5 20h14" />
+                  </svg>
+                </button>
+                <button class="task-icon" type="button" data-action="edit" data-task-id="${taskId}" aria-label="Edit ${escapeHtml(task.name)}" title="Edit task">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                   </svg>
                 </button>
-                <button class="task-icon delete" type="button" data-action="delete" data-task-id="${task.id}" aria-label="Delete ${escapeHtml(task.name)}" title="Delete task">
+                <button class="task-icon delete" type="button" data-action="delete" data-task-id="${taskId}" aria-label="Delete ${escapeHtml(task.name)}" title="Delete task">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M3 6h18" />
                     <path d="M8 6V4h8v2" />
@@ -2823,6 +2971,11 @@
       }
 
       function renderStatus(tasks, current) {
+        if (reorderInFlight) {
+          statusText.textContent = "Saving schedule";
+          return;
+        }
+
         const active = tasks.find((task) => taskStatus(task, current) === "active");
         const queued = tasks.find((task) => taskStatus(task, current) === "queued");
 
@@ -3023,9 +3176,85 @@
           return;
         }
 
+        if (action === "move-end") {
+          await moveTask(taskId, tasks.at(-1).id, "after");
+          return;
+        }
+
         if (action === "delete" && confirm("Delete this task and move the following tasks up?")) {
           await deleteTask(taskId);
         }
+      });
+
+      let pointerDragState = null;
+
+      taskList.addEventListener("pointerdown", (event) => {
+        const handle = event.target.closest("[data-drag-handle]");
+        const task = event.target.closest(".task[data-task-id]");
+        if (!handle || !task || reorderInFlight || event.button !== 0) return;
+
+        event.preventDefault();
+        draggedTaskId = task.dataset.taskId;
+        pointerDragState = {
+          pointerId: event.pointerId,
+          targetTaskId: null,
+          position: null,
+        };
+        handle.setPointerCapture?.(event.pointerId);
+        task.classList.add("dragging");
+      });
+
+      taskList.addEventListener("pointermove", (event) => {
+        if (!pointerDragState || event.pointerId !== pointerDragState.pointerId) return;
+
+        event.preventDefault();
+        const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
+        const targetTask = hoveredElement?.closest(".task[data-task-id]");
+        if (
+          !draggedTaskId ||
+          !targetTask ||
+          targetTask.dataset.taskId === draggedTaskId
+        ) {
+          pointerDragState.targetTaskId = null;
+          pointerDragState.position = null;
+          clearDropIndicators();
+          return;
+        }
+
+        clearDropIndicators();
+        const bounds = targetTask.getBoundingClientRect();
+        const position = event.clientY < bounds.top + bounds.height / 2 ? "before" : "after";
+        pointerDragState.targetTaskId = targetTask.dataset.taskId;
+        pointerDragState.position = position;
+        targetTask.classList.add(`drop-${position}`);
+
+        if (event.clientY < 56) {
+          window.scrollBy({ top: -18, behavior: "auto" });
+        } else if (event.clientY > window.innerHeight - 56) {
+          window.scrollBy({ top: 18, behavior: "auto" });
+        }
+      });
+
+      taskList.addEventListener("pointerup", async (event) => {
+        if (!pointerDragState || event.pointerId !== pointerDragState.pointerId) return;
+        event.preventDefault();
+        const movedTaskId = draggedTaskId;
+        const { targetTaskId, position } = pointerDragState;
+        draggedTaskId = null;
+        pointerDragState = null;
+        clearDropIndicators();
+        render();
+
+        if (targetTaskId && position) {
+          await moveTask(movedTaskId, targetTaskId, position);
+        }
+      });
+
+      taskList.addEventListener("pointercancel", () => {
+        draggedTaskId = null;
+        pointerDragState = null;
+        clearDropIndicators();
+        render();
       });
 
       quickButtons.forEach((button) => {
