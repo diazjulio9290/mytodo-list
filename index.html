@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123b3a" />
     <title>Productive Day Timer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
         color-scheme: light;
@@ -720,58 +727,1527 @@
           justify-items: start;
         }
       }
+
+      /* Modern visual refresh */
+      :root {
+        --ink: #172623;
+        --muted: #687976;
+        --soft: #edf3f0;
+        --line: #dfe8e4;
+        --paper: rgba(255, 255, 255, 0.88);
+        --teal: #167c72;
+        --teal-dark: #0f5f58;
+        --gold: #f2ba55;
+        --coral: #ec735f;
+        --forest: #123b3a;
+        --cream: #f6f4ed;
+        --shadow: 0 24px 64px rgba(28, 52, 47, 0.09);
+        --shadow-soft: 0 12px 34px rgba(28, 52, 47, 0.07);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        position: relative;
+        isolation: isolate;
+        font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 5% 4%, rgba(242, 186, 85, 0.18), transparent 23rem),
+          radial-gradient(circle at 94% 12%, rgba(22, 124, 114, 0.13), transparent 25rem),
+          linear-gradient(145deg, #f8f8f4 0%, #f1f5f2 48%, #f7f2eb 100%);
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background-image:
+          linear-gradient(rgba(18, 59, 58, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(18, 59, 58, 0.025) 1px, transparent 1px);
+        background-size: 42px 42px;
+        content: "";
+        mask-image: linear-gradient(to bottom, black, transparent 68%);
+        pointer-events: none;
+      }
+
+      ::selection {
+        background: rgba(22, 124, 114, 0.2);
+        color: var(--forest);
+      }
+
+      button,
+      input {
+        font-family: inherit;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid rgba(22, 124, 114, 0.24);
+        outline-offset: 2px;
+      }
+
+      .login-screen {
+        overflow-y: auto;
+        place-items: center;
+        padding: 32px;
+        background:
+          radial-gradient(circle at 10% 90%, rgba(242, 186, 85, 0.22), transparent 26rem),
+          radial-gradient(circle at 86% 12%, rgba(92, 170, 157, 0.22), transparent 24rem),
+          #e9efeb;
+        backdrop-filter: none;
+      }
+
+      .login-screen::before,
+      .login-screen::after {
+        position: fixed;
+        width: 18rem;
+        height: 18rem;
+        border: 1px solid rgba(18, 59, 58, 0.08);
+        border-radius: 50%;
+        content: "";
+        pointer-events: none;
+      }
+
+      .login-screen::before {
+        top: -9rem;
+        right: 12%;
+      }
+
+      .login-screen::after {
+        bottom: -11rem;
+        left: 8%;
+        width: 24rem;
+        height: 24rem;
+      }
+
+      .login-shell {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        width: min(1120px, 100%);
+        min-height: min(720px, calc(100vh - 64px));
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 32px;
+        background: #fff;
+        box-shadow:
+          0 36px 90px rgba(18, 59, 58, 0.16),
+          0 3px 12px rgba(18, 59, 58, 0.06);
+      }
+
+      .login-story {
+        position: relative;
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 46px 50px 40px;
+        color: #f7fbf8;
+        background:
+          radial-gradient(circle at 84% 22%, rgba(242, 186, 85, 0.24), transparent 15rem),
+          radial-gradient(circle at 12% 84%, rgba(83, 168, 153, 0.25), transparent 20rem),
+          linear-gradient(150deg, #174c49 0%, #123b3a 46%, #0c2d2d 100%);
+      }
+
+      .login-story::before {
+        position: absolute;
+        top: 10%;
+        right: -26%;
+        width: 27rem;
+        height: 27rem;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 44px rgba(255, 255, 255, 0.025),
+          0 0 0 88px rgba(255, 255, 255, 0.018);
+        content: "";
+      }
+
+      .login-story > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand-lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        width: fit-content;
+      }
+
+      .brand-lockup > span:last-child {
+        display: grid;
+        gap: 1px;
+      }
+
+      .brand-lockup strong {
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 0.92rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-lockup small {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .brand-lockup-light small {
+        color: rgba(232, 244, 239, 0.62);
+      }
+
+      .brand-mark {
+        display: inline-grid;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 14px;
+        color: #fff;
+        background: linear-gradient(145deg, #29988c, #126d66);
+        box-shadow: 0 10px 24px rgba(11, 62, 58, 0.2);
+      }
+
+      .brand-mark svg {
+        width: 23px;
+        height: 23px;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+      }
+
+      .login-story-copy {
+        margin: auto 0 34px;
+      }
+
+      .login-story .eyebrow {
+        color: #8ed5c8;
+      }
+
+      .login-story-copy h2 {
+        margin: 0;
+        max-width: 540px;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: clamp(3.1rem, 5vw, 5.2rem);
+        font-weight: 700;
+        line-height: 0.96;
+        letter-spacing: -0.065em;
+      }
+
+      .login-story-copy h2 em {
+        color: #f4c66f;
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 400;
+        letter-spacing: -0.045em;
+      }
+
+      .login-story-copy > p:last-child {
+        max-width: 450px;
+        margin: 24px 0 0;
+        color: rgba(232, 244, 239, 0.7);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .schedule-preview {
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.075);
+        box-shadow: 0 22px 55px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(16px);
+      }
+
+      .preview-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        color: rgba(239, 249, 245, 0.72);
+        font-size: 0.73rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .preview-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #f4ce83;
+      }
+
+      .preview-live i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #f4c66f;
+        box-shadow: 0 0 0 4px rgba(244, 198, 111, 0.12);
+      }
+
+      .preview-task {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+      }
+
+      .preview-time {
+        color: rgba(235, 246, 241, 0.54);
+        font-size: 0.75rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .preview-task-copy {
+        display: grid;
+        gap: 3px;
+      }
+
+      .preview-task-copy strong {
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 0.84rem;
+      }
+
+      .preview-task-copy small {
+        color: rgba(235, 246, 241, 0.5);
+        font-size: 0.7rem;
+      }
+
+      .preview-check,
+      .preview-order {
+        display: inline-grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border-radius: 10px;
+        color: #113b39;
+        background: #f4c66f;
+        font-size: 0.73rem;
+        font-weight: 800;
+      }
+
+      .preview-order {
+        color: rgba(235, 246, 241, 0.6);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .preview-progress {
+        height: 4px;
+        margin: 5px 42px 3px 60px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .preview-progress span {
+        display: block;
+        width: 63%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #68c6b7, #f4c66f);
+      }
+
+      .story-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 22px;
+        color: rgba(232, 244, 239, 0.5);
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+
+      .story-footer span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .story-footer span::before {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #69c2b3;
+        content: "";
+      }
+
+      .login-box {
+        display: flex;
+        width: auto;
+        flex-direction: column;
+        justify-content: center;
+        padding: 54px 56px;
+        border: 0;
+        border-radius: 0;
+        background: #fff;
+        box-shadow: none;
+      }
+
+      .mobile-brand {
+        display: none;
+      }
+
+      .login-box .eyebrow {
+        margin-bottom: 12px;
+        color: var(--teal);
+      }
+
+      .login-box h1 {
+        max-width: 410px;
+        margin: 0;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: clamp(2.3rem, 3.4vw, 3.35rem);
+        font-weight: 700;
+        line-height: 1.02;
+        letter-spacing: -0.055em;
+      }
+
+      .login-box .subtle {
+        max-width: 390px;
+        margin: 18px 0 30px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .login-box form {
+        gap: 16px;
+        margin-top: 0;
+      }
+
+      .login-box label {
+        gap: 9px;
+        color: #2b3d39;
+        font-size: 0.79rem;
+        font-weight: 700;
+      }
+
+      .login-box input {
+        min-height: 52px;
+        border-color: #dce6e1;
+        border-radius: 14px;
+        background: #f8faf9;
+        padding: 0 16px;
+      }
+
+      .login-box input::placeholder,
+      input::placeholder {
+        color: #9aaba6;
+      }
+
+      .auth-actions {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 4px;
+      }
+
+      .auth-actions .primary {
+        display: flex;
+        grid-column: 1 / -1;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+      }
+
+      .auth-actions .secondary {
+        min-height: 44px;
+        font-size: 0.79rem;
+      }
+
+      .form-message {
+        min-height: 18px;
+        font-size: 0.79rem;
+      }
+
+      .login-hint {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        margin-top: 18px;
+        color: #879792;
+        line-height: 1.5;
+      }
+
+      .privacy-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        margin-top: 5px;
+        border-radius: 50%;
+        background: #6bb9aa;
+        box-shadow: 0 0 0 4px rgba(107, 185, 170, 0.12);
+      }
+
+      .shell {
+        width: min(1280px, calc(100% - 52px));
+        padding: 30px 0 52px;
+      }
+
+      header {
+        grid-template-columns: minmax(0, 1fr) 268px;
+        align-items: stretch;
+        gap: 32px;
+        padding: 0 0 32px;
+      }
+
+      .header-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-width: 0;
+        gap: 42px;
+        padding: 5px 0;
+      }
+
+      .hero-copy .eyebrow {
+        margin-bottom: 11px;
+        color: var(--teal);
+      }
+
+      header h1 {
+        max-width: 790px;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: clamp(3.2rem, 5.7vw, 5.7rem);
+        font-weight: 700;
+        line-height: 0.94;
+        letter-spacing: -0.07em;
+      }
+
+      .hero-subtitle {
+        max-width: 590px;
+        margin: 22px 0 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .eyebrow,
+      .section-kicker {
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .header-actions {
+        align-content: end;
+        gap: 12px;
+      }
+
+      .clock {
+        position: relative;
+        min-width: 0;
+        overflow: hidden;
+        padding: 22px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        border-radius: 22px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(247, 250, 248, 0.78));
+        box-shadow: var(--shadow-soft);
+      }
+
+      .clock::after {
+        position: absolute;
+        top: -36px;
+        right: -32px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(242, 186, 85, 0.19);
+        content: "";
+      }
+
+      .clock-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .clock-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--teal);
+        box-shadow: 0 0 0 4px rgba(22, 124, 114, 0.1);
+      }
+
+      .clock-time {
+        position: relative;
+        z-index: 1;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 2.1rem;
+        font-weight: 700;
+        letter-spacing: -0.05em;
+      }
+
+      .user-row {
+        padding: 0 3px 0 7px;
+        font-size: 0.77rem;
+        font-weight: 600;
+      }
+
+      .grid {
+        grid-template-columns: minmax(310px, 360px) minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      .side-stack,
+      .workspace {
+        gap: 24px;
+      }
+
+      .panel,
+      .timeline,
+      .calendar-panel,
+      .history-panel {
+        border: 1px solid rgba(220, 230, 225, 0.92);
+        border-radius: 24px;
+        background: var(--paper);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(20px);
+      }
+
+      .panel {
+        top: 22px;
+        padding: 24px;
+      }
+
+      .panel::before,
+      .timeline::before {
+        position: absolute;
+        top: 0;
+        right: 26px;
+        left: 26px;
+        height: 2px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(90deg, transparent, rgba(22, 124, 114, 0.42), transparent);
+        content: "";
+      }
+
+      .panel-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .section-icon {
+        display: inline-grid;
+        width: 39px;
+        height: 39px;
+        place-items: center;
+        border-radius: 13px;
+        color: #fff;
+        background: linear-gradient(145deg, #238e82, #146e67);
+        box-shadow: 0 10px 20px rgba(22, 124, 114, 0.2);
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
+      .section-kicker {
+        display: block;
+        margin-bottom: 4px;
+        color: #80918c;
+        font-size: 0.59rem;
+      }
+
+      .panel h2,
+      .timeline h2,
+      .calendar-panel h2,
+      .history-panel h2 {
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+      }
+
+      .panel > .subtle {
+        margin: 18px 0 22px;
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      form {
+        gap: 15px;
+      }
+
+      label {
+        gap: 8px;
+        color: #354642;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      input {
+        min-height: 49px;
+        border-color: #dce6e2;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.86);
+        padding: 0 14px;
+      }
+
+      input:focus {
+        border-color: rgba(22, 124, 114, 0.6);
+        outline-color: rgba(22, 124, 114, 0.12);
+        box-shadow: 0 8px 26px rgba(22, 124, 114, 0.08);
+      }
+
+      .duration-row {
+        grid-template-columns: minmax(0, 1fr) 132px;
+      }
+
+      .quick {
+        gap: 7px;
+      }
+
+      .quick button,
+      .ghost,
+      .secondary,
+      .primary,
+      .danger {
+        border-radius: 12px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          background 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .quick button,
+      .ghost,
+      .secondary {
+        min-height: 42px;
+        border: 1px solid rgba(22, 124, 114, 0.07);
+        color: var(--teal-dark);
+        background: #edf5f2;
+      }
+
+      .quick button:hover,
+      .ghost:hover,
+      .secondary:hover {
+        border-color: rgba(22, 124, 114, 0.14);
+        background: #e5f1ed;
+        box-shadow: 0 7px 18px rgba(22, 124, 114, 0.08);
+      }
+
+      .primary {
+        min-height: 50px;
+        color: white;
+        background: linear-gradient(135deg, #197f76, #0e665f);
+        box-shadow: 0 14px 26px rgba(22, 124, 114, 0.2);
+      }
+
+      .primary:hover {
+        box-shadow: 0 17px 30px rgba(22, 124, 114, 0.26);
+      }
+
+      .add-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 49px;
+        white-space: nowrap;
+      }
+
+      .danger {
+        border: 1px solid rgba(236, 115, 95, 0.08);
+        color: #bd5d4d;
+        background: #fff2ef;
+        font-size: 0.74rem;
+      }
+
+      .danger:hover {
+        background: #ffe9e5;
+      }
+
+      .calendar-panel,
+      .history-panel {
+        padding: 21px;
+      }
+
+      .calendar-top,
+      .section-top {
+        margin-bottom: 17px;
+      }
+
+      .month-title {
+        margin-bottom: 13px;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 0.9rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .calendar-controls {
+        gap: 6px;
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(22, 124, 114, 0.08);
+        border-radius: 11px;
+        background: #edf5f2;
+        font-size: 1.2rem;
+        transition:
+          transform 150ms ease,
+          background 150ms ease;
+      }
+
+      .icon-btn:hover {
+        transform: translateY(-1px);
+        background: #e3f0ec;
+      }
+
+      .weekdays,
+      .calendar-grid {
+        gap: 5px;
+      }
+
+      .weekdays {
+        margin-bottom: 6px;
+        color: #8d9d98;
+        font-size: 0.63rem;
+        letter-spacing: 0.04em;
+      }
+
+      .calendar-day {
+        min-height: 39px;
+        border-color: transparent;
+        border-radius: 11px;
+        color: #43534f;
+        background: rgba(247, 249, 248, 0.92);
+        font-size: 0.75rem;
+        font-weight: 700;
+        transition:
+          transform 140ms ease,
+          background 140ms ease;
+      }
+
+      .calendar-day:hover {
+        transform: translateY(-1px);
+        background: #eaf3f0;
+      }
+
+      .calendar-day.muted {
+        color: #b6c0bd;
+        background: transparent;
+      }
+
+      .calendar-day.today {
+        border-color: rgba(242, 186, 85, 0.72);
+        box-shadow: inset 0 0 0 1px rgba(242, 186, 85, 0.16);
+      }
+
+      .calendar-day.selected {
+        color: #fff;
+        background: linear-gradient(145deg, #1c857b, #116b64);
+        box-shadow: 0 8px 16px rgba(22, 124, 114, 0.2);
+      }
+
+      .calendar-day.has-tasks::after {
+        bottom: 4px;
+        width: 4px;
+        height: 4px;
+      }
+
+      .date-summary {
+        margin-top: 14px;
+        font-size: 0.74rem;
+        line-height: 1.45;
+      }
+
+      .history-list {
+        gap: 8px;
+        max-height: 278px;
+        padding-right: 3px;
+        scrollbar-color: #cddbd6 transparent;
+        scrollbar-width: thin;
+      }
+
+      .history-item {
+        padding: 12px 13px;
+        border-color: #e3ebe7;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .history-item strong {
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 0.82rem;
+      }
+
+      .history-item span {
+        font-size: 0.73rem;
+        font-weight: 600;
+      }
+
+      .reset-actions {
+        gap: 7px;
+      }
+
+      .timeline {
+        position: relative;
+        min-height: 660px;
+        overflow: hidden;
+        padding: 27px;
+      }
+
+      .timeline::after {
+        position: absolute;
+        top: -90px;
+        right: -100px;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(242, 186, 85, 0.12), transparent 68%);
+        content: "";
+        pointer-events: none;
+      }
+
+      .timeline > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .timeline-top {
+        margin-bottom: 23px;
+      }
+
+      .timeline-top h2 {
+        margin-bottom: 4px;
+        font-size: 1.32rem;
+      }
+
+      .selected-date {
+        font-size: 0.77rem;
+        font-weight: 600;
+      }
+
+      .status-pill {
+        min-height: 34px;
+        padding: 0 13px;
+        border: 1px solid rgba(242, 186, 85, 0.17);
+        color: #7a5b20;
+        background: #fff7e8;
+        font-size: 0.73rem;
+        font-weight: 700;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        box-shadow: 0 0 0 4px rgba(242, 186, 85, 0.13);
+      }
+
+      .empty {
+        min-height: 520px;
+        border-color: #d8e3df;
+        border-radius: 20px;
+        background:
+          linear-gradient(145deg, rgba(250, 251, 249, 0.9), rgba(245, 249, 246, 0.72));
+      }
+
+      .empty-content {
+        display: grid;
+        max-width: 390px;
+        justify-items: center;
+      }
+
+      .empty-content p {
+        margin: 22px 0 17px;
+      }
+
+      .empty strong {
+        margin-bottom: 9px;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 1.45rem;
+        letter-spacing: -0.035em;
+      }
+
+      .empty-orbit {
+        position: relative;
+        display: inline-grid;
+        width: 96px;
+        height: 96px;
+        place-items: center;
+        border: 1px solid rgba(22, 124, 114, 0.13);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 12px rgba(22, 124, 114, 0.035),
+          0 0 0 26px rgba(22, 124, 114, 0.025);
+      }
+
+      .empty-orbit::before {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #f6cb7a, #ecaa3d);
+        box-shadow: 0 9px 22px rgba(242, 186, 85, 0.3);
+        content: "";
+      }
+
+      .empty-orbit span {
+        position: absolute;
+        top: 9px;
+        right: 16px;
+        width: 9px;
+        height: 9px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: var(--teal);
+        box-shadow: 0 4px 12px rgba(22, 124, 114, 0.3);
+      }
+
+      .empty-hint {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border: 1px solid #e2ebe7;
+        border-radius: 999px;
+        color: #71817c;
+        background: #fff;
+        font-size: 0.69rem;
+        font-weight: 700;
+      }
+
+      .day-note {
+        padding: 15px 17px;
+        border-radius: 14px;
+        font-size: 0.82rem;
+      }
+
+      .task-list {
+        gap: 10px;
+      }
+
+      .task {
+        position: relative;
+        grid-template-columns: 82px minmax(0, 1fr) auto;
+        min-height: 110px;
+        overflow: hidden;
+        border-color: #e0e9e5;
+        border-radius: 17px;
+        background: rgba(255, 255, 255, 0.84);
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .task::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: #d5e0dc;
+        content: "";
+      }
+
+      .task:hover {
+        transform: translateY(-1px);
+        border-color: #d4e2dc;
+        box-shadow: 0 12px 26px rgba(28, 52, 47, 0.07);
+      }
+
+      .task.active {
+        border-color: rgba(22, 124, 114, 0.27);
+        background:
+          linear-gradient(105deg, rgba(234, 246, 242, 0.88), rgba(255, 255, 255, 0.92));
+        box-shadow: 0 15px 34px rgba(22, 124, 114, 0.1);
+      }
+
+      .task.active::before {
+        background: linear-gradient(to bottom, var(--teal), var(--gold));
+      }
+
+      .start,
+      .countdown,
+      .task-title {
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+      }
+
+      .start {
+        font-size: 1.04rem;
+        letter-spacing: -0.03em;
+      }
+
+      .end {
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+
+      .task-title {
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+      }
+
+      .tag {
+        padding: 5px 9px;
+        color: #586964;
+        background: #edf3f0;
+        font-size: 0.68rem;
+        font-weight: 700;
+      }
+
+      .tag.active-tag {
+        color: var(--teal-dark);
+        background: rgba(22, 124, 114, 0.11);
+      }
+
+      .bar {
+        height: 7px;
+        background: #e6eeea;
+      }
+
+      .fill {
+        background: linear-gradient(90deg, #1a8177, #4fa99b 70%, #f2ba55);
+      }
+
+      .countdown {
+        min-width: 105px;
+        font-size: 1.08rem;
+        letter-spacing: -0.035em;
+      }
+
+      .task-icon {
+        width: 34px;
+        height: 34px;
+        border-color: #dfe8e4;
+        border-radius: 11px;
+        background: #f7f9f8;
+      }
+
+      .task-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .login-shell {
+          animation: surface-in 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+
+        .login-story-copy,
+        .schedule-preview {
+          animation: content-in 650ms 120ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+
+        .panel,
+        .calendar-panel,
+        .history-panel,
+        .timeline {
+          animation: surface-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+
+        .calendar-panel {
+          animation-delay: 60ms;
+        }
+
+        .history-panel {
+          animation-delay: 120ms;
+        }
+
+        @keyframes surface-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px) scale(0.995);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes content-in {
+          from {
+            opacity: 0;
+            transform: translateY(14px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      }
+
+      @media (max-width: 1000px) {
+        .login-story {
+          padding-right: 38px;
+          padding-left: 38px;
+        }
+
+        .login-box {
+          padding-right: 40px;
+          padding-left: 40px;
+        }
+
+        .login-story-copy h2 {
+          font-size: clamp(2.8rem, 5vw, 4.2rem);
+        }
+      }
+
+      @media (max-width: 880px) {
+        .shell {
+          width: min(100% - 32px, 760px);
+          padding-top: 22px;
+        }
+
+        header {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 24px;
+        }
+
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .header-copy {
+          gap: 46px;
+        }
+
+        .header-actions {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+        }
+
+        .user-row {
+          display: grid;
+          justify-items: end;
+        }
+
+        .panel {
+          position: static;
+        }
+
+        .clock {
+          min-width: 0;
+        }
+      }
+
+      @media (max-width: 840px) {
+        .login-screen {
+          padding: 20px;
+        }
+
+        .login-shell {
+          display: block;
+          width: min(520px, 100%);
+          min-height: 0;
+          border-radius: 26px;
+        }
+
+        .login-story {
+          display: none;
+        }
+
+        .login-box {
+          min-height: min(680px, calc(100vh - 40px));
+          padding: 44px;
+        }
+
+        .mobile-brand {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          margin-bottom: auto;
+          padding-bottom: 44px;
+          font-family: "Manrope", ui-sans-serif, sans-serif;
+          font-size: 0.9rem;
+          font-weight: 800;
+        }
+
+        .login-box .login-hint {
+          margin-top: auto;
+          padding-top: 28px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        body::before {
+          background-size: 32px 32px;
+        }
+
+        .shell {
+          width: min(100% - 20px, 600px);
+          padding-bottom: 28px;
+        }
+
+        header {
+          padding-bottom: 24px;
+        }
+
+        .header-copy {
+          gap: 38px;
+        }
+
+        header h1 {
+          font-size: clamp(2.65rem, 14vw, 4.15rem);
+        }
+
+        .hero-subtitle {
+          margin-top: 16px;
+          font-size: 0.9rem;
+        }
+
+        .header-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .user-row {
+          display: flex;
+          justify-items: initial;
+        }
+
+        .clock {
+          padding: 19px 20px;
+        }
+
+        .login-screen {
+          align-items: start;
+          padding: 10px;
+        }
+
+        .login-shell {
+          border-radius: 22px;
+        }
+
+        .login-box {
+          min-height: calc(100vh - 20px);
+          padding: 30px 24px;
+        }
+
+        .login-box h1 {
+          font-size: clamp(2.15rem, 11vw, 2.8rem);
+        }
+
+        .auth-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .auth-actions .primary {
+          grid-column: auto;
+        }
+
+        .duration-row,
+        .task {
+          grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .timeline,
+        .calendar-panel,
+        .history-panel {
+          border-radius: 20px;
+        }
+
+        .timeline {
+          min-height: 540px;
+          padding: 20px;
+        }
+
+        .timeline-top {
+          align-items: flex-start;
+        }
+
+        .empty {
+          min-height: 400px;
+          padding: 22px;
+        }
+
+        .task {
+          gap: 12px;
+          padding: 17px;
+        }
+
+        .task-side {
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          justify-items: stretch;
+        }
+
+        .countdown {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 390px) {
+        .login-box {
+          padding-right: 20px;
+          padding-left: 20px;
+        }
+
+        .quick {
+          grid-template-columns: 1fr;
+        }
+
+        .timeline-top {
+          display: grid;
+        }
+
+        .status-pill {
+          width: fit-content;
+        }
+      }
     </style>
   </head>
   <body class="locked">
     <section class="login-screen" id="loginScreen">
-      <div class="login-box">
-        <p class="eyebrow">Saved planner</p>
-        <h1>Sign in to your day.</h1>
-        <p class="subtle">
-          Create an account to keep your calendar, activity history, and active
-          schedule saved with Neon.
-        </p>
-
-        <form id="loginForm">
-          <label>
-            Email
-            <input id="username" type="email" autocomplete="email" required />
-          </label>
-          <label>
-            Password
-            <input
-              id="password"
-              type="password"
-              autocomplete="current-password"
-              required
-            />
-          </label>
-          <div class="auth-actions">
-            <button class="primary" type="submit">Sign in</button>
-            <button class="secondary" id="createAccountButton" type="button">
-              Create account
-            </button>
-            <button class="secondary" id="resetPasswordButton" type="button">
-              Reset password
-            </button>
+      <div class="login-shell">
+        <aside class="login-story" aria-hidden="true">
+          <div class="brand-lockup brand-lockup-light">
+            <span class="brand-mark">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 6v6l3.5 2" />
+                <circle cx="12" cy="12" r="8.5" />
+              </svg>
+            </span>
+            <span>
+              <strong>Productive Day</strong>
+              <small>Intentional time, beautifully planned</small>
+            </span>
           </div>
-          <p class="form-message" id="loginMessage"></p>
-        </form>
-        <p class="login-hint">
-          Your account and tasks sync through Neon Postgres.
-        </p>
+
+          <div class="login-story-copy">
+            <p class="eyebrow">Plan with intention</p>
+            <h2>Make time feel<br /><em>like yours.</em></h2>
+            <p>
+              Shape a calm, focused day with a live schedule that keeps every
+              task moving at the right pace.
+            </p>
+          </div>
+
+          <div class="schedule-preview">
+            <div class="preview-topline">
+              <span>Today&rsquo;s flow</span>
+              <span class="preview-live"><i></i> Live</span>
+            </div>
+            <div class="preview-task preview-task-active">
+              <span class="preview-time">9:30</span>
+              <span class="preview-task-copy">
+                <strong>Deep work session</strong>
+                <small>In progress &middot; 42 min left</small>
+              </span>
+              <span class="preview-check">&#10003;</span>
+            </div>
+            <div class="preview-progress"><span></span></div>
+            <div class="preview-task">
+              <span class="preview-time">10:30</span>
+              <span class="preview-task-copy">
+                <strong>Project check-in</strong>
+                <small>Up next &middot; 30 min</small>
+              </span>
+              <span class="preview-order">02</span>
+            </div>
+          </div>
+
+          <div class="story-footer">
+            <span>Live timeline</span>
+            <span>Calendar history</span>
+            <span>Cloud sync</span>
+          </div>
+        </aside>
+
+        <div class="login-box">
+          <div class="mobile-brand">
+            <span class="brand-mark">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 6v6l3.5 2" />
+                <circle cx="12" cy="12" r="8.5" />
+              </svg>
+            </span>
+            <strong>Productive Day</strong>
+          </div>
+          <p class="eyebrow">Welcome back</p>
+          <h1>Pick up where you left off.</h1>
+          <p class="subtle">
+            Sign in to open your saved timeline, calendar, and activity
+            history.
+          </p>
+
+          <form id="loginForm">
+            <label>
+              <span>Email address</span>
+              <input
+                id="username"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter your password"
+                required
+              />
+            </label>
+            <div class="auth-actions">
+              <button class="primary" type="submit">
+                <span>Sign in</span><span aria-hidden="true">&rarr;</span>
+              </button>
+              <button class="secondary" id="createAccountButton" type="button">
+                Create account
+              </button>
+              <button class="secondary" id="resetPasswordButton" type="button">
+                Reset password
+              </button>
+            </div>
+            <p class="form-message" id="loginMessage"></p>
+          </form>
+          <p class="login-hint">
+            <span class="privacy-dot"></span>
+            Your account and tasks sync privately through Neon Postgres.
+          </p>
+        </div>
       </div>
     </section>
 
     <main class="shell app" id="app" hidden>
       <header>
-        <section>
-          <p class="eyebrow">Pacific time planner</p>
-          <h1>Build your productive day.</h1>
+        <section class="header-copy">
+          <div class="brand-lockup">
+            <span class="brand-mark">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 6v6l3.5 2" />
+                <circle cx="12" cy="12" r="8.5" />
+              </svg>
+            </span>
+            <span>
+              <strong>Productive Day</strong>
+              <small>Pacific time planner</small>
+            </span>
+          </div>
+          <div class="hero-copy">
+            <p class="eyebrow">Your day, in motion</p>
+            <h1>Build a day that moves with you.</h1>
+            <p class="hero-subtitle">
+              Plan one focused block at a time and let the timeline keep pace.
+            </p>
+          </div>
         </section>
         <section class="header-actions">
           <aside class="clock" aria-label="Current Pacific time">
-            <p class="clock-label">Current time</p>
+            <p class="clock-label"><span class="clock-dot"></span> Pacific time</p>
             <div class="clock-time" id="clock">--:-- --</div>
           </aside>
           <div class="user-row">
@@ -784,7 +2260,13 @@
       <section class="grid">
         <div class="side-stack">
           <aside class="panel">
-            <h2>Add a task</h2>
+            <div class="panel-heading">
+              <span class="section-icon" aria-hidden="true">+</span>
+              <span>
+                <span class="section-kicker">New time block</span>
+                <h2>Add a task</h2>
+              </span>
+            </div>
             <p class="subtle">
               Each task starts when the previous one ends, with a live timer for
               the task currently in motion.
@@ -792,18 +2274,19 @@
 
             <form id="taskForm">
               <label>
-                Task?
+                Task name
                 <input
                   id="taskName"
                   type="text"
                   autocomplete="off"
+                  placeholder="What needs your focus?"
                   required
                 />
               </label>
 
               <div class="duration-row">
                 <label>
-                  Duration?
+                  Duration
                   <input
                     id="taskDuration"
                     type="number"
@@ -813,7 +2296,9 @@
                     required
                   />
                 </label>
-                <button class="secondary" type="submit">Enter</button>
+                <button class="secondary add-button" type="submit">
+                  Add task <span aria-hidden="true">&rarr;</span>
+                </button>
               </div>
 
               <div class="quick" aria-label="Quick duration buttons">
@@ -823,17 +2308,20 @@
               </div>
 
               <button class="primary" type="button" id="finishDay">
-                No more tasks
+                Wrap up the day
               </button>
             </form>
           </aside>
 
           <aside class="calendar-panel">
             <div class="calendar-top">
-              <h2>Calendar</h2>
+              <div>
+                <span class="section-kicker">Browse your rhythm</span>
+                <h2>Calendar</h2>
+              </div>
               <div class="calendar-controls">
-                <button class="icon-btn" id="prevMonth" type="button" aria-label="Previous month">‹</button>
-                <button class="icon-btn" id="nextMonth" type="button" aria-label="Next month">›</button>
+                <button class="icon-btn" id="prevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
+                <button class="icon-btn" id="nextMonth" type="button" aria-label="Next month">&rsaquo;</button>
               </div>
             </div>
             <div class="month-title" id="monthTitle">Month</div>
@@ -846,7 +2334,10 @@
 
           <aside class="history-panel">
             <div class="section-top">
-              <h2>Activity history</h2>
+              <div>
+                <span class="section-kicker">Recent momentum</span>
+                <h2>Activity history</h2>
+              </div>
               <button class="ghost" id="todayButton" type="button">Today</button>
             </div>
             <ol class="history-list" id="historyList"></ol>
@@ -865,6 +2356,7 @@
           <section class="timeline">
             <div class="timeline-top">
               <div>
+                <span class="section-kicker">Your schedule</span>
                 <h2>Timeline</h2>
                 <div class="selected-date" id="selectedDateLabel">Today</div>
               </div>
@@ -872,10 +2364,16 @@
             </div>
 
             <div id="empty" class="empty">
-              <p>
-                <strong>Enjoy your productive day.</strong>
-                Add a task when you are ready to begin.
-              </p>
+              <div class="empty-content">
+                <span class="empty-orbit" aria-hidden="true">
+                  <span></span>
+                </span>
+                <p>
+                  <strong>Your day has room to breathe.</strong>
+                  Add a task when you are ready to begin.
+                </p>
+                <span class="empty-hint">Start with one focused block</span>
+              </div>
             </div>
 
             <ol class="task-list" id="taskList"></ol>
