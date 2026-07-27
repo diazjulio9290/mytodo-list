@@ -690,23 +690,6 @@
         stroke-width: 2.2;
       }
 
-      .task.dragging {
-        opacity: 0.45;
-        transform: scale(0.99);
-      }
-
-      .task.drop-before {
-        box-shadow:
-          0 -4px 0 var(--gold),
-          0 12px 26px rgba(28, 52, 47, 0.07);
-      }
-
-      .task.drop-after {
-        box-shadow:
-          0 4px 0 var(--gold),
-          0 12px 26px rgba(28, 52, 47, 0.07);
-      }
-
       .task-icon.drag-handle {
         cursor: grab;
         touch-action: none;
@@ -725,6 +708,7 @@
 
       .reorder-hint {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         margin: -8px 0 14px;
@@ -738,6 +722,46 @@
         height: 16px;
         flex: 0 0 auto;
         stroke-width: 2;
+      }
+
+      .reorder-key {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
+      .reorder-key::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        content: "";
+      }
+
+      .moving-key {
+        border-color: rgba(104, 74, 214, 0.2);
+        color: #5638bd;
+      }
+
+      .moving-key::before {
+        background: #684ad6;
+        box-shadow: 0 0 0 3px rgba(104, 74, 214, 0.13);
+      }
+
+      .landing-key {
+        border-color: rgba(213, 120, 0, 0.24);
+        color: #9b5600;
+      }
+
+      .landing-key::before {
+        background: #e39118;
+        box-shadow: 0 0 0 3px rgba(227, 145, 24, 0.15);
       }
 
       .sr-only {
@@ -1833,20 +1857,98 @@
         box-shadow: 0 15px 34px rgba(22, 124, 114, 0.1);
       }
 
+      .task.active::before {
+        background: linear-gradient(to bottom, var(--teal), var(--gold));
+      }
+
+      .task.dragging {
+        z-index: 3;
+        opacity: 1;
+        transform: scale(0.985);
+        border-color: #684ad6;
+        background:
+          linear-gradient(105deg, rgba(242, 238, 255, 0.98), rgba(255, 255, 255, 0.96));
+        box-shadow:
+          0 0 0 4px rgba(104, 74, 214, 0.2),
+          0 18px 36px rgba(81, 55, 170, 0.2);
+      }
+
+      .task.dragging::before {
+        width: 6px;
+        background: #684ad6;
+      }
+
+      .task.dragging::after,
+      .task.drop-before::after,
+      .task.drop-after::after {
+        position: absolute;
+        z-index: 4;
+        top: 9px;
+        right: auto;
+        left: 12px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        color: #fff;
+        font-family: "Manrope", ui-sans-serif, sans-serif;
+        font-size: 0.62rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+
+      .task.dragging::after {
+        background: #684ad6;
+        box-shadow: 0 5px 12px rgba(81, 55, 170, 0.28);
+        content: "Moving";
+      }
+
+      .task.dragging .drag-handle {
+        border-color: #684ad6;
+        color: #fff;
+        background: #684ad6;
+      }
+
+      .task.drop-before,
+      .task.drop-after {
+        z-index: 2;
+        transform: translateY(0);
+        border-color: #d57800;
+        background:
+          linear-gradient(105deg, rgba(255, 245, 225, 0.98), rgba(255, 255, 255, 0.96));
+      }
+
       .task.drop-before {
         box-shadow:
-          0 -4px 0 var(--gold),
-          0 12px 26px rgba(28, 52, 47, 0.07);
+          inset 0 7px 0 #efa51e,
+          0 0 0 4px rgba(227, 145, 24, 0.26),
+          0 18px 34px rgba(164, 93, 0, 0.16);
       }
 
       .task.drop-after {
         box-shadow:
-          0 4px 0 var(--gold),
-          0 12px 26px rgba(28, 52, 47, 0.07);
+          inset 0 -7px 0 #efa51e,
+          0 0 0 4px rgba(227, 145, 24, 0.26),
+          0 18px 34px rgba(164, 93, 0, 0.16);
       }
 
-      .task.active::before {
-        background: linear-gradient(to bottom, var(--teal), var(--gold));
+      .task.drop-before::before,
+      .task.drop-after::before {
+        width: 6px;
+        background: #efa51e;
+      }
+
+      .task.drop-before::after {
+        background: #b96500;
+        box-shadow: 0 5px 12px rgba(164, 93, 0, 0.22);
+        content: "Drop before ↑";
+      }
+
+      .task.drop-after::after {
+        background: #b96500;
+        box-shadow: 0 5px 12px rgba(164, 93, 0, 0.22);
+        content: "Drop after ↓";
       }
 
       .start,
@@ -2441,7 +2543,9 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                 <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
               </svg>
-              Drag a task to a new position. Its time and every following time update automatically.
+              <span>Drag a task to a new position. Following times update automatically.</span>
+              <span class="reorder-key moving-key">Moving task</span>
+              <span class="reorder-key landing-key">Landing spot</span>
             </p>
             <p class="sr-only" id="reorderAnnouncement" aria-live="polite"></p>
 
