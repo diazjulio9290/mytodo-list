@@ -39,7 +39,44 @@ export function reorderAnchor(tasks, movedTaskId, reorderedTasks) {
   return startOf(movedFirstTask ? reorderedTasks[0] : originalFirst);
 }
 
-export function rescheduleTasks(tasks, anchorStart) {
+function endOf(task) {
+  return task.endAt || task.end_at;
+}
+
+// A "gap" is idle time before a task: it starts later than the task before it ends.
+// Returns one entry per position: the gap task's start time in ms, or null.
+export function gapStarts(tasks) {
+  return tasks.map((task, index) => {
+    if (index === 0) return null;
+    const start = new Date(startOf(task)).getTime();
+    const previousEnd = new Date(endOf(tasks[index - 1])).getTime();
+    return start - previousEnd >= 1000 ? start : null;
+  });
+}
+
+// When a task is removed, the task after it takes over its gap (if it had one).
+export function gapStartsAfterRemoval(gaps, removedIndex) {
+  const next = [...gaps];
+  const [removedGap] = next.splice(removedIndex, 1);
+  if (removedIndex > 0 && removedIndex < next.length && next[removedIndex] === null) {
+    next[removedIndex] = removedGap ?? null;
+  }
+  if (next.length > 0) next[0] = null;
+  return next;
+}
+
+// Where a newly added task should start. Pass `now` only when the day is today,
+// so a task added after the last one already ended starts now, not in the past.
+export function nextTaskStart(tasks, fallbackStart, now = null) {
+  const lastTask = tasks.at(-1);
+  if (!lastTask) return new Date(fallbackStart);
+
+  const lastEnd = new Date(endOf(lastTask));
+  if (now && lastEnd.getTime() < new Date(now).getTime()) return new Date(now);
+  return lastEnd;
+}
+
+export function rescheduleTasks(tasks, anchorStart, gaps = []) {
   const anchor = new Date(anchorStart);
   if (Number.isNaN(anchor.getTime())) {
     throw new Error("A valid schedule start time is required.");
@@ -52,6 +89,10 @@ export function rescheduleTasks(tasks, anchorStart) {
     if (!Number.isFinite(minutes) || minutes <= 0) {
       throw new Error("Every task needs a positive duration.");
     }
+
+    // Keep idle time where it was: a position that had a gap never starts earlier than before.
+    const gapStart = index > 0 ? gaps[index] : null;
+    if (gapStart != null) nextStart = Math.max(nextStart, gapStart);
 
     const startAt = new Date(nextStart).toISOString();
     const endAt = new Date(nextStart + minutes * 60 * 1000).toISOString();

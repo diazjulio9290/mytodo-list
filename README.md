@@ -30,3 +30,27 @@ SESSION_SECRET=replace-this-with-a-long-random-string
 4. Deploy.
 
 GitHub Pages can only host the old static version. This Neon version needs Vercel or another Node-capable host because the database password must stay on the server.
+
+## Accounts
+
+New accounts are turned off. The sign in page has no "Create account" button and the server refuses sign ups.
+
+To create an account (for example on a fresh database), set `ALLOW_SIGNUP=true` in `.env` or in the Vercel environment variables, redeploy, create the account, then remove the variable and redeploy again.
+
+## Passwords
+
+Change your password from inside the app with the "Change password" button next to "Log out". You need your current password to do it.
+
+There is no "forgot password" reset on the sign in page, because a reset that only asks for an email lets anyone take over an account. If you forget your password, set a new one by hand:
+
+1. Make a new password hash on your computer:
+
+```sh
+node -e "const c=require('crypto');const s=c.randomBytes(16).toString('hex');console.log(s+':'+c.scryptSync(process.argv[1],s,64).toString('hex'))" 'your-new-password'
+```
+
+2. Paste the result into the Neon SQL editor:
+
+```sql
+update app_users set password_hash = 'PASTE_HASH_HERE' where email = 'you@example.com';
+```
