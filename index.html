@@ -1242,6 +1242,7 @@
       }
 
       .auth-actions .secondary {
+        grid-column: 1 / -1;
         min-height: 44px;
         font-size: 0.79rem;
       }
@@ -2062,6 +2063,164 @@
         }
       }
 
+      /* Check off, inline edit, change password */
+      .task-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .task-heading .task-title {
+        margin: 0;
+        padding-top: 1px;
+      }
+
+      .task-check {
+        display: inline-grid;
+        flex: none;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        padding: 0;
+        border: 2px solid #b9cbc5;
+        border-radius: 50%;
+        background: #fff;
+        color: transparent;
+        cursor: pointer;
+        transition:
+          border-color 150ms ease,
+          background 150ms ease,
+          color 150ms ease;
+      }
+
+      .task-check svg {
+        width: 13px;
+        height: 13px;
+        stroke-width: 3;
+      }
+
+      .task-check:hover {
+        border-color: var(--teal);
+        color: rgba(22, 124, 114, 0.5);
+      }
+
+      .task-check[aria-checked="true"] {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #fff;
+      }
+
+      .task.done::before {
+        background: var(--teal);
+      }
+
+      .task.done .task-title {
+        color: var(--muted);
+        text-decoration: line-through;
+        text-decoration-color: rgba(104, 121, 118, 0.55);
+      }
+
+      .tag.done-tag {
+        color: var(--teal-dark);
+        background: rgba(22, 124, 114, 0.11);
+      }
+
+      .countdown.done {
+        color: var(--teal-dark);
+      }
+
+      .task-edit {
+        gap: 8px;
+      }
+
+      .task-edit input {
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 11px;
+        font-size: 0.9rem;
+      }
+
+      .task-edit-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .task-edit-row input {
+        width: 84px;
+      }
+
+      .task-edit-unit {
+        margin-right: auto;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .task-edit-row button {
+        min-height: 40px;
+        padding: 0 15px;
+        font-size: 0.8rem;
+      }
+
+      .task-edit-row .primary {
+        box-shadow: none;
+      }
+
+      .user-row {
+        flex-wrap: wrap;
+      }
+
+      .user-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .user-actions button {
+        white-space: nowrap;
+      }
+
+      .password-dialog {
+        width: min(100% - 32px, 400px);
+        padding: 26px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: #fff;
+        color: var(--ink);
+        box-shadow: var(--shadow);
+      }
+
+      .password-dialog::backdrop {
+        background: rgba(18, 59, 58, 0.38);
+      }
+
+      .password-dialog h2 {
+        margin: 0 0 6px;
+        font-size: 1.25rem;
+        letter-spacing: -0.025em;
+      }
+
+      .password-dialog .subtle {
+        margin: 0 0 18px;
+      }
+
+      .dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .dialog-actions .primary {
+        min-height: 44px;
+      }
+
+      .dialog-actions .ghost {
+        min-height: 44px;
+      }
+
       @media (max-width: 1000px) {
         .login-story {
           padding-right: 38px;
@@ -2384,9 +2543,6 @@
               <button class="secondary" id="createAccountButton" type="button">
                 Create account
               </button>
-              <button class="secondary" id="resetPasswordButton" type="button">
-                Reset password
-              </button>
             </div>
             <p class="form-message" id="loginMessage"></p>
           </form>
@@ -2428,7 +2584,10 @@
           </aside>
           <div class="user-row">
             <span id="activeUser">Signed in</span>
-            <button class="ghost" id="logoutButton" type="button">Log out</button>
+            <span class="user-actions">
+              <button class="ghost" id="changePasswordButton" type="button">Change password</button>
+              <button class="ghost" id="logoutButton" type="button">Log out</button>
+            </span>
           </div>
         </section>
       </header>
@@ -2571,8 +2730,35 @@
       </section>
     </main>
 
+    <dialog class="password-dialog" id="passwordDialog" aria-labelledby="passwordDialogTitle">
+      <h2 id="passwordDialogTitle">Change password</h2>
+      <p class="subtle">Enter your current password, then choose a new one.</p>
+      <form id="passwordForm">
+        <label>
+          <span>Current password</span>
+          <input id="currentPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <label>
+          <span>New password</span>
+          <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <p class="form-message" id="passwordMessage" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button class="ghost" id="cancelPasswordButton" type="button">Cancel</button>
+          <button class="primary" type="submit">Save password</button>
+        </div>
+      </form>
+    </dialog>
+
     <script type="module">
-      import { reorderAnchor, reorderTasks, rescheduleTasks } from "/schedule.js";
+      import {
+        gapStarts,
+        gapStartsAfterRemoval,
+        nextTaskStart,
+        reorderAnchor,
+        reorderTasks,
+        rescheduleTasks,
+      } from "/schedule.js";
 
       async function apiRequest(path, options = {}) {
         const response = await fetch(path, {
@@ -2597,7 +2783,13 @@
       const loginForm = document.querySelector("#loginForm");
       const loginMessage = document.querySelector("#loginMessage");
       const createAccountButton = document.querySelector("#createAccountButton");
-      const resetPasswordButton = document.querySelector("#resetPasswordButton");
+      const changePasswordButton = document.querySelector("#changePasswordButton");
+      const passwordDialog = document.querySelector("#passwordDialog");
+      const passwordForm = document.querySelector("#passwordForm");
+      const currentPasswordInput = document.querySelector("#currentPassword");
+      const newPasswordInput = document.querySelector("#newPassword");
+      const passwordMessage = document.querySelector("#passwordMessage");
+      const cancelPasswordButton = document.querySelector("#cancelPasswordButton");
       const usernameInput = document.querySelector("#username");
       const passwordInput = document.querySelector("#password");
       const activeUser = document.querySelector("#activeUser");
@@ -2634,6 +2826,8 @@
       let isLoading = false;
       let draggedTaskId = null;
       let reorderInFlight = false;
+      let editingTaskId = null;
+      let lastStructure = "";
 
       const pacificFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
@@ -2743,6 +2937,7 @@
           startAt: row.start_at,
           endAt: row.end_at,
           doneAdding: row.done_adding,
+          done: Boolean(row.is_done),
         };
       }
 
@@ -2750,15 +2945,16 @@
         return tasks.some((task) => task.done_adding);
       }
 
-      function rescheduleDay(day, anchorStart = null) {
+      function rescheduleDay(day, anchorStart = null, gaps = []) {
         const firstStart = anchorStart || firstStartTime();
-        const scheduled = rescheduleTasks(day, firstStart);
+        const scheduled = rescheduleTasks(day, firstStart, gaps);
         day.splice(0, day.length, ...scheduled);
       }
 
       async function loadSelectedDateData() {
         if (!session) return;
         isLoading = true;
+        editingTaskId = null;
         render();
 
         try {
@@ -2778,9 +2974,9 @@
         render();
       }
 
-      async function persistSchedule() {
+      async function persistSchedule(gaps = gapStarts(tasks)) {
         const originalFirstStart = tasks[0] ? new Date(tasks[0].startAt) : null;
-        rescheduleDay(tasks, originalFirstStart);
+        rescheduleDay(tasks, originalFirstStart, gaps);
 
         const updates = tasks.map((task) =>
           apiRequest(`/api/tasks/${task.id}`, {
@@ -2796,7 +2992,7 @@
           }),
         );
 
-        const results = await Promise.all(updates);
+        await Promise.all(updates);
       }
 
       async function moveTask(taskId, targetTaskId, position) {
@@ -2817,7 +3013,7 @@
         }
 
         const anchorStart = reorderAnchor(originalTasks, taskId, reordered);
-        tasks = rescheduleTasks(reordered, anchorStart);
+        tasks = rescheduleTasks(reordered, anchorStart, gapStarts(originalTasks));
         reorderInFlight = true;
         render();
 
@@ -2854,8 +3050,11 @@
 
       async function addTask(name, minutes) {
         const durationMs = minutes * 60 * 1000;
-        const lastTask = tasks.at(-1);
-        const startAt = lastTask ? new Date(lastTask.endAt) : firstStartTime();
+        const startAt = nextTaskStart(
+          tasks,
+          firstStartTime(),
+          isToday(selectedDate) ? now() : null,
+        );
         const endAt = new Date(startAt.getTime() + durationMs);
 
         try {
@@ -2882,6 +3081,12 @@
       }
 
       async function deleteTask(taskId) {
+        const removedIndex = tasks.findIndex((task) => task.id === taskId);
+        const gaps =
+          removedIndex < 0
+            ? gapStarts(tasks)
+            : gapStartsAfterRemoval(gapStarts(tasks), removedIndex);
+
         try {
           await apiRequest(`/api/tasks/${taskId}`, { method: "DELETE" });
         } catch (error) {
@@ -2891,7 +3096,7 @@
 
         tasks = tasks.filter((task) => task.id !== taskId);
         try {
-          await persistSchedule();
+          await persistSchedule(gaps);
           await loadSelectedDateData();
         } catch (scheduleError) {
           alert(scheduleError.message);
@@ -2940,33 +3145,140 @@
         await loadSelectedDateData();
       }
 
-      async function editTask(taskId) {
-        const task = tasks.find((item) => item.id === taskId);
-        if (!task) return;
+      function openEditor(taskId) {
+        if (!tasks.some((task) => task.id === taskId)) return;
+        editingTaskId = taskId;
+        render();
+        const nameInput = taskList.querySelector(".task-edit [name=editName]");
+        nameInput?.focus();
+        nameInput?.select();
+      }
 
-        const newName = prompt("Edit task", task.name);
-        if (newName === null) return;
+      function closeEditor() {
+        editingTaskId = null;
+        render();
+      }
 
-        const cleanName = newName.trim();
-        if (!cleanName) return;
+      async function saveEdit(form) {
+        const task = tasks.find((item) => item.id === editingTaskId);
+        if (!task) return closeEditor();
 
-        const newDuration = prompt("Edit duration in minutes", String(task.minutes));
-        if (newDuration === null) return;
+        const cleanName = form.elements.editName.value.trim();
+        const minutes = Math.round(Number(form.elements.editMinutes.value));
+        if (!cleanName || !Number.isFinite(minutes) || minutes < 1) return;
 
-        const minutes = Math.round(Number(newDuration));
-        if (!Number.isFinite(minutes) || minutes < 1) return;
+        if (cleanName === task.name && minutes === task.minutes) {
+          return closeEditor();
+        }
 
         task.name = cleanName;
         task.minutes = minutes;
         task.task_name = cleanName;
         task.duration_minutes = minutes;
+        editingTaskId = null;
 
         try {
           await persistSchedule();
-          await loadSelectedDateData();
         } catch (error) {
           alert(error.message);
         }
+        await loadSelectedDateData();
+      }
+
+      async function toggleDone(taskId) {
+        const task = tasks.find((item) => item.id === taskId);
+        if (!task) return;
+
+        const setDone = (done) => {
+          task.done = done;
+          task.is_done = done;
+          historyEntries
+            .filter((entry) => entry.id === taskId)
+            .forEach((entry) => {
+              entry.done = done;
+              entry.is_done = done;
+            });
+        };
+        const nextDone = !task.done;
+        setDone(nextDone);
+        render();
+
+        try {
+          await apiRequest(`/api/tasks/${taskId}/done`, {
+            method: "PUT",
+            body: JSON.stringify({ done: nextDone }),
+          });
+        } catch (error) {
+          setDone(!nextDone);
+          render();
+          alert(error.message);
+        }
+      }
+
+      // Keeps what you typed (and where the cursor is) if the list has to redraw mid edit.
+      function captureEditor() {
+        const form = taskList.querySelector(".task-edit");
+        if (!form) return null;
+
+        const focused = form.contains(document.activeElement) ? document.activeElement : null;
+        return {
+          taskId: form.dataset.taskId,
+          name: form.elements.editName.value,
+          minutes: form.elements.editMinutes.value,
+          focusName: focused?.name || null,
+          selection:
+            focused === form.elements.editName
+              ? [focused.selectionStart, focused.selectionEnd]
+              : null,
+        };
+      }
+
+      function restoreEditor(draft) {
+        const form = taskList.querySelector(".task-edit");
+        if (!form || !draft || form.dataset.taskId !== draft.taskId) return;
+
+        form.elements.editName.value = draft.name;
+        form.elements.editMinutes.value = draft.minutes;
+        const field = draft.focusName ? form.elements[draft.focusName] : null;
+        field?.focus();
+        if (draft.selection) {
+          form.elements.editName.setSelectionRange(...draft.selection);
+        }
+      }
+
+      // Anything that changes what the list looks like (not just the ticking numbers).
+      function structureKey(current) {
+        return [
+          dateKey(current),
+          ...tasks.map((task) => `${task.id}:${taskStatus(task, current)}`),
+        ].join("|");
+      }
+
+      // Runs every second. Only touches the clock, countdowns and progress bars,
+      // so buttons and focus stay put. Redraws fully when a task changes state.
+      function tick() {
+        const current = now();
+        clock.textContent = formatTime(current);
+
+        if (!session || isLoading) return;
+        if (structureKey(current) !== lastStructure) {
+          render();
+          return;
+        }
+
+        const tasksById = new Map(tasks.map((task) => [String(task.id), task]));
+        taskList.querySelectorAll(".task[data-task-id]").forEach((element) => {
+          const task = tasksById.get(element.dataset.taskId);
+          if (!task) return;
+
+          const view = taskView(task, current);
+          const countdown = element.querySelector(".countdown");
+          const fill = element.querySelector(".fill");
+          if (countdown && countdown.textContent !== view.remaining) {
+            countdown.textContent = view.remaining;
+          }
+          if (fill) fill.style.width = `${view.progress}%`;
+        });
       }
 
       function render() {
@@ -2981,10 +3293,13 @@
         selectedDateLabel.textContent = dateLabelFormatter.format(dateFromKey(selectedDate));
 
         if (!draggedTaskId) {
+          const draft = captureEditor();
           taskList.innerHTML = isLoading
             ? `<li class="history-item"><strong>Loading timeline</strong><span>Fetching your saved tasks.</span></li>`
             : tasks.map((task) => renderTask(task, current)).join("");
+          restoreEditor(draft);
         }
+        lastStructure = structureKey(current);
         renderStatus(tasks, current);
         renderCalendar();
         renderHistory();
@@ -2995,71 +3310,99 @@
             : `${tasks.length} saved ${tasks.length === 1 ? "activity" : "activities"} for this day.`;
       }
 
-      function renderTask(task, current) {
+      function taskView(task, current) {
         const startAt = new Date(task.startAt);
         const endAt = new Date(task.endAt);
         const state = taskStatus(task, current);
         const total = endAt - startAt;
         const elapsed = current - startAt;
         const progress =
-          state === "finished"
+          task.done || state === "finished"
             ? 100
             : state === "queued"
               ? 0
               : Math.min(100, Math.max(0, (elapsed / total) * 100));
-        const label =
-          state === "active"
+        const label = task.done
+          ? "Done"
+          : state === "active"
             ? "In progress"
             : state === "queued"
               ? "Starts later"
               : "Time passed";
-        const remaining =
-          state === "queued"
+        const remaining = task.done
+          ? "Done"
+          : state === "queued"
             ? `Starts in ${formatDuration((startAt - current) / 1000)}`
             : state === "finished"
               ? "Move to reschedule"
               : formatDuration((endAt - current) / 1000);
-        const taskId = escapeHtml(String(task.id));
-        const isLastTask = String(tasks.at(-1)?.id) === String(task.id);
 
-        return `
-          <li class="task ${state === "active" ? "active" : ""}" data-task-id="${taskId}">
-            <div class="time-block">
-              <span class="start">${formatTime(startAt)}</span>
-              <span class="end">ends ${formatTime(endAt)}</span>
-            </div>
-            <div class="task-main">
-              <p class="task-title">${escapeHtml(task.name)}</p>
+        return { startAt, endAt, state, progress, label, remaining };
+      }
+
+      function renderTask(task, current) {
+        const { startAt, endAt, state, progress, label, remaining } = taskView(task, current);
+        const taskId = escapeHtml(String(task.id));
+        const taskName = escapeHtml(task.name);
+        const isLastTask = String(tasks.at(-1)?.id) === String(task.id);
+        const isEditing = task.id === editingTaskId;
+        const isActive = state === "active" && !task.done;
+        const classes = ["task", isActive ? "active" : "", task.done ? "done" : ""]
+          .filter(Boolean)
+          .join(" ");
+        const countdownClass = task.done ? "done" : state === "finished" ? "finished" : "";
+
+        const main = isEditing
+          ? `
+              <form class="task-edit" data-task-id="${taskId}">
+                <input name="editName" type="text" autocomplete="off" value="${taskName}" aria-label="Task name" required />
+                <div class="task-edit-row">
+                  <input name="editMinutes" type="number" min="1" step="1" value="${task.minutes}" aria-label="Duration in minutes" required />
+                  <span class="task-edit-unit">min</span>
+                  <button class="ghost" type="button" data-action="cancel-edit" data-task-id="${taskId}">Cancel</button>
+                  <button class="primary" type="submit">Save</button>
+                </div>
+              </form>`
+          : `
+              <div class="task-heading">
+                <button class="task-check" type="button" role="checkbox" aria-checked="${task.done}" data-action="toggle-done" data-task-id="${taskId}" aria-label="Mark ${taskName} as done" title="${task.done ? "Mark as not done" : "Mark as done"}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="m5 12.5 4.5 4.5L19 7.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+                <p class="task-title">${taskName}</p>
+              </div>
               <div class="meta">
-                <span class="tag ${state === "active" ? "active-tag" : ""}">${label}</span>
+                <span class="tag ${isActive ? "active-tag" : ""} ${task.done ? "done-tag" : ""}">${label}</span>
                 <span class="tag">${task.minutes} min</span>
               </div>
               <div class="bar" aria-label="${label} progress">
                 <div class="fill" style="width: ${progress}%"></div>
-              </div>
-            </div>
-            <div class="task-side">
-              <div class="countdown ${state === "finished" ? "finished" : ""}">${remaining}</div>
+              </div>`;
+
+        const actions = isEditing
+          ? ""
+          : `
               <div class="task-actions" aria-label="Task actions">
                 <span class="task-icon drag-handle" data-drag-handle="true" aria-hidden="true" title="Drag to reorder">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
                   </svg>
                 </span>
-                <button class="task-icon" type="button" data-action="move-end" data-task-id="${taskId}" aria-label="Move ${escapeHtml(task.name)} to the end" title="Move to end" ${isLastTask ? "disabled" : ""}>
+                <button class="task-icon" type="button" data-action="move-end" data-task-id="${taskId}" aria-label="Move ${taskName} to the end" title="Move to end" ${isLastTask ? "disabled" : ""}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M12 4v12" />
                     <path d="m7 11 5 5 5-5" />
                     <path d="M5 20h14" />
                   </svg>
                 </button>
-                <button class="task-icon" type="button" data-action="edit" data-task-id="${taskId}" aria-label="Edit ${escapeHtml(task.name)}" title="Edit task">
+                <button class="task-icon" type="button" data-action="edit" data-task-id="${taskId}" aria-label="Edit ${taskName}" title="Edit task">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                   </svg>
                 </button>
-                <button class="task-icon delete" type="button" data-action="delete" data-task-id="${taskId}" aria-label="Delete ${escapeHtml(task.name)}" title="Delete task">
+                <button class="task-icon delete" type="button" data-action="delete" data-task-id="${taskId}" aria-label="Delete ${taskName}" title="Delete task">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M3 6h18" />
                     <path d="M8 6V4h8v2" />
@@ -3068,7 +3411,18 @@
                     <path d="M14 11v5" />
                   </svg>
                 </button>
-              </div>
+              </div>`;
+
+        return `
+          <li class="${classes}" data-task-id="${taskId}">
+            <div class="time-block">
+              <span class="start">${formatTime(startAt)}</span>
+              <span class="end">ends ${formatTime(endAt)}</span>
+            </div>
+            <div class="task-main">${main}
+            </div>
+            <div class="task-side">
+              <div class="countdown ${countdownClass}">${remaining}</div>${actions}
             </div>
           </li>
         `;
@@ -3080,13 +3434,16 @@
           return;
         }
 
-        const active = tasks.find((task) => taskStatus(task, current) === "active");
-        const queued = tasks.find((task) => taskStatus(task, current) === "queued");
+        const open = tasks.filter((task) => !task.done);
+        const active = open.find((task) => taskStatus(task, current) === "active");
+        const queued = open.find((task) => taskStatus(task, current) === "queued");
 
         if (active) {
           statusText.textContent = `Now: ${active.name}`;
         } else if (queued) {
           statusText.textContent = `Next: ${queued.name}`;
+        } else if (open.length > 0) {
+          statusText.textContent = `${open.length} not checked off`;
         } else if (tasks.length > 0) {
           statusText.textContent = "All complete";
         } else {
@@ -3134,7 +3491,7 @@
                   ({ key, task, startAt }) => `
                     <li class="history-item">
                       <strong>${escapeHtml(task.name)}</strong>
-                      <span>${dateLabelFormatter.format(dateFromKey(key))} · ${formatTime(startAt)} · ${task.minutes} min</span>
+                      <span>${dateLabelFormatter.format(dateFromKey(key))} · ${formatTime(startAt)} · ${task.minutes} min${task.done ? " · Done" : ""}</span>
                     </li>
                   `,
                 )
@@ -3214,38 +3571,42 @@
         await completeAuth();
       });
 
-      resetPasswordButton.addEventListener("click", async () => {
-        loginMessage.textContent = "";
-        const email = usernameInput.value.trim().toLowerCase();
-        const password = passwordInput.value;
+      changePasswordButton.addEventListener("click", () => {
+        passwordForm.reset();
+        passwordMessage.textContent = "";
+        passwordDialog.showModal();
+      });
 
-        if (!email || !password) {
-          loginMessage.textContent = "Enter your email and new password.";
+      cancelPasswordButton.addEventListener("click", () => passwordDialog.close());
+
+      passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        passwordMessage.textContent = "";
+
+        if (newPasswordInput.value.length < 8) {
+          passwordMessage.textContent = "Use at least 8 characters.";
           return;
         }
-
-        if (password.length < 8) {
-          loginMessage.textContent = "Use at least 8 characters.";
-          return;
-        }
-
-        const confirmed = confirm(
-          `Reset the password for ${email} and sign in with the new password?`,
-        );
-        if (!confirmed) return;
 
         try {
-          const reset = await apiRequest("/api/reset-password", {
+          await apiRequest("/api/change-password", {
             method: "POST",
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({
+              current_password: currentPasswordInput.value,
+              new_password: newPasswordInput.value,
+            }),
           });
-          session = reset.session;
         } catch (error) {
-          loginMessage.textContent = error.message;
+          passwordMessage.textContent = error.message;
           return;
         }
 
-        await completeAuth();
+        passwordForm.reset();
+        passwordDialog.close();
+        activeUser.textContent = "Password changed";
+        setTimeout(() => {
+          if (session) activeUser.textContent = `Signed in as ${session.user.email}`;
+        }, 4000);
       });
 
       logoutButton.addEventListener("click", async () => {
@@ -3254,6 +3615,7 @@
         tasks = [];
         historyEntries = [];
         activityDates = new Set();
+        editingTaskId = null;
         showLogin();
       });
 
@@ -3276,7 +3638,17 @@
         const { action, taskId } = button.dataset;
 
         if (action === "edit") {
-          await editTask(taskId);
+          openEditor(taskId);
+          return;
+        }
+
+        if (action === "cancel-edit") {
+          closeEditor();
+          return;
+        }
+
+        if (action === "toggle-done") {
+          await toggleDone(taskId);
           return;
         }
 
@@ -3290,12 +3662,25 @@
         }
       });
 
+      taskList.addEventListener("submit", async (event) => {
+        const form = event.target.closest(".task-edit");
+        if (!form) return;
+        event.preventDefault();
+        await saveEdit(form);
+      });
+
+      taskList.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && event.target.closest(".task-edit")) {
+          closeEditor();
+        }
+      });
+
       let pointerDragState = null;
 
       taskList.addEventListener("pointerdown", (event) => {
         const handle = event.target.closest("[data-drag-handle]");
         const task = event.target.closest(".task[data-task-id]");
-        if (!handle || !task || reorderInFlight || event.button !== 0) return;
+        if (!handle || !task || reorderInFlight || editingTaskId || event.button !== 0) return;
 
         event.preventDefault();
         draggedTaskId = task.dataset.taskId;
@@ -3401,13 +3786,13 @@
       prevMonth.addEventListener("click", async () => {
         calendarCursor.setMonth(calendarCursor.getMonth() - 1);
         calendarCursor = startOfMonth(calendarCursor);
-        await loadSelectedDateData();
+        render();
       });
 
       nextMonth.addEventListener("click", async () => {
         calendarCursor.setMonth(calendarCursor.getMonth() + 1);
         calendarCursor = startOfMonth(calendarCursor);
-        await loadSelectedDateData();
+        render();
       });
 
       todayButton.addEventListener("click", async () => {
@@ -3432,7 +3817,7 @@
       }
 
       init();
-      setInterval(render, 1000);
+      setInterval(tick, 1000);
     </script>
   </body>
 </html>

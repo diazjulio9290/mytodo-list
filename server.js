@@ -3,7 +3,7 @@ import { promisify } from "node:util";
 import dotenv from "dotenv";
 import express from "express";
 import pg from "pg";
-import { rescheduleTasks } from "./schedule.js";
+import { gapStarts, rescheduleTasks } from "./schedule.js";
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ const taskColumns = `
   end_at,
   sort_order,
   done_adding,
+  is_done,
   created_at,
   updated_at
 `;
@@ -167,6 +168,9 @@ async function initDb() {
       updated_at timestamptz not null default now()
     );
 
+    alter table tasks
+      add column if not exists is_done boolean not null default false;
+
     create index if not exists tasks_user_date_sort_idx
       on tasks (user_id, task_date, sort_order, start_at);
   `);
@@ -228,35 +232,34 @@ app.post("/api/signin", async (req, res, next) => {
   }
 });
 
-app.post("/api/reset-password", async (req, res, next) => {
+app.post("/api/change-password", requireUser, async (req, res, next) => {
   try {
-    const email = String(req.body.email || "").trim().toLowerCase();
-    const password = String(req.body.password || "");
+    const currentPassword = String(req.body.current_password || "");
+    const newPassword = String(req.body.new_password || "");
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Enter an email and new password." });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Enter your current and new password." });
     }
 
-    if (password.length < 8) {
+    if (newPassword.length < 8) {
       return res.status(400).json({ error: "Use at least 8 characters." });
     }
 
-    const passwordHash = await hashPassword(password);
     const { rows } = await pool.query(
-      `update app_users
-       set password_hash = $1
-       where email = $2
-       returning id, email`,
-      [passwordHash, email],
+      "select password_hash from app_users where id = $1",
+      [req.user.id],
     );
 
-    if (!rows[0]) {
-      return res.status(404).json({ error: "No account found for that email." });
+    if (!rows[0] || !(await verifyPassword(currentPassword, rows[0].password_hash))) {
+      return res.status(400).json({ error: "Current password is incorrect." });
     }
 
-    const user = rows[0];
-    res.setHeader("Set-Cookie", sessionCookie(signSession(user.id)));
-    res.json({ session: toApiSession(user) });
+    await pool.query("update app_users set password_hash = $1 where id = $2", [
+      await hashPassword(newPassword),
+      req.user.id,
+    ]);
+
+    res.json({ ok: true });
   } catch (error) {
     next(error);
   }
@@ -382,7 +385,7 @@ app.put("/api/tasks/reorder", requireUser, async (req, res, next) => {
     }
 
     const orderedTasks = taskIds.map((taskId) => tasksById.get(taskId));
-    const scheduledTasks = rescheduleTasks(orderedTasks, anchorStart);
+    const scheduledTasks = rescheduleTasks(orderedTasks, anchorStart, gapStarts(rows));
 
     for (const task of scheduledTasks) {
       await client.query(
@@ -416,6 +419,28 @@ app.put("/api/tasks/reorder", requireUser, async (req, res, next) => {
     next(error);
   } finally {
     client?.release();
+  }
+});
+
+app.put("/api/tasks/:id/done", requireUser, async (req, res, next) => {
+  try {
+    if (typeof req.body.done !== "boolean") {
+      return res.status(400).json({ error: "done must be true or false." });
+    }
+
+    const { rows } = await pool.query(
+      `update tasks
+       set is_done = $1,
+           updated_at = now()
+       where id = $2 and user_id = $3
+       returning ${taskColumns}`,
+      [req.body.done, req.params.id, req.user.id],
+    );
+
+    if (!rows[0]) return res.status(404).json({ error: "Task not found." });
+    res.json({ task: rows[0] });
+  } catch (error) {
+    next(error);
   }
 });
 
