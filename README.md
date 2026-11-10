@@ -31,6 +31,12 @@ SESSION_SECRET=replace-this-with-a-long-random-string
 
 GitHub Pages can only host the old static version. This Neon version needs Vercel or another Node-capable host because the database password must stay on the server.
 
+## Accounts
+
+New accounts are turned off. The sign in page has no "Create account" button and the server refuses sign ups.
+
+To create an account (for example on a fresh database), set `ALLOW_SIGNUP=true` in `.env` or in the Vercel environment variables, redeploy, create the account, then remove the variable and redeploy again.
+
 ## Passwords
 
 Change your password from inside the app with the "Change password" button next to "Log out". You need your current password to do it.

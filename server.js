@@ -12,6 +12,8 @@ const scrypt = promisify(crypto.scrypt);
 const app = express();
 const port = process.env.PORT || 3000;
 const sessionSecret = process.env.SESSION_SECRET;
+// New accounts are off unless ALLOW_SIGNUP=true. Turn it on only to create your own account.
+const signupEnabled = process.env.ALLOW_SIGNUP === "true";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required. Add your Neon connection string to .env.");
@@ -179,7 +181,7 @@ async function initDb() {
 app.get("/api/session", async (req, res, next) => {
   try {
     const user = await currentUser(req);
-    res.json({ session: user ? toApiSession(user) : null });
+    res.json({ session: user ? toApiSession(user) : null, signupEnabled });
   } catch (error) {
     next(error);
   }
@@ -187,6 +189,10 @@ app.get("/api/session", async (req, res, next) => {
 
 app.post("/api/signup", async (req, res, next) => {
   try {
+    if (!signupEnabled) {
+      return res.status(403).json({ error: "New accounts are turned off." });
+    }
+
     const email = String(req.body.email || "").trim().toLowerCase();
     const password = String(req.body.password || "");
 

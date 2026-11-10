@@ -2540,7 +2540,7 @@
               <button class="primary" type="submit">
                 <span>Sign in</span><span aria-hidden="true">&rarr;</span>
               </button>
-              <button class="secondary" id="createAccountButton" type="button">
+              <button class="secondary" id="createAccountButton" type="button" hidden>
                 Create account
               </button>
             </div>
@@ -3806,6 +3806,7 @@
       async function init() {
         const data = await apiRequest("/api/session");
         session = data.session;
+        createAccountButton.hidden = !data.signupEnabled;
 
         if (session) {
           selectToday();
