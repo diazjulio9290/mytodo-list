@@ -3,216 +3,129 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#123b3a" />
+    <meta name="theme-color" content="#0f3832" />
     <title>Productive Day Timer</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230f3832'/%3E%3Ccircle cx='16' cy='16' r='8.5' fill='none' stroke='%23f2a93b' stroke-width='2.4'/%3E%3Cpath d='M16 11v5l3.2 2' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Instrument+Sans:wght@400..700&display=swap"
       rel="stylesheet"
     />
     <style>
+      /*
+        Design tokens
+        Mist paper, spruce ink, one evergreen for actions, marigold only for "now".
+      */
       :root {
-        color-scheme: light;
-        --ink: #18202f;
-        --muted: #627088;
-        --soft: #eef3f7;
-        --line: #dde6ed;
-        --paper: rgba(255, 255, 255, 0.88);
-        --teal: #0c8f86;
-        --teal-dark: #08726c;
-        --gold: #f4b942;
-        --coral: #ff6f61;
-        --shadow: 0 24px 70px rgba(22, 39, 61, 0.14);
+        --paper: #f1f4ee;
+        --surface: #ffffff;
+        --ink: #132e2a;
+        --ink-soft: #51635d;
+        --ink-faint: #5f7068;
+        --line: #dce3db;
+        --line-strong: #c2cdc4;
+        --evergreen: #1c6b5c;
+        --evergreen-dark: #155548;
+        --evergreen-deep: #0f3832;
+        --evergreen-wash: #e3efe8;
+        --marigold: #f2a93b;
+        --marigold-ink: #8f5d0c;
+        --marigold-wash: #fcf0d9;
+        --clay: #ad4a37;
+        --clay-wash: #f9e9e4;
+        --on-deep: #f3f6f1;
+        --on-deep-soft: rgba(243, 246, 241, 0.72);
+
+        --display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+        --text: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+        --radius-control: 10px;
+        --radius-card: 14px;
+        --radius-panel: 18px;
+        --radius-band: 28px;
+
+        --rail-time: 84px;
+        --rail-gutter: 30px;
       }
 
-      * {
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
       }
 
       body {
         margin: 0;
         min-height: 100vh;
-        font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
+        background: var(--paper);
         color: var(--ink);
-        background:
-          radial-gradient(circle at 12% 16%, rgba(244, 185, 66, 0.28), transparent 30%),
-          radial-gradient(circle at 86% 18%, rgba(12, 143, 134, 0.2), transparent 28%),
-          linear-gradient(135deg, #f8faf8 0%, #edf5f3 48%, #f7f1ea 100%);
-      }
-
-      button,
-      input {
-        font: inherit;
+        font-family: var(--text);
+        font-size: 1rem;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
 
       body.locked {
         overflow: hidden;
       }
 
-      .login-screen {
-        position: fixed;
-        inset: 0;
-        z-index: 20;
-        display: grid;
-        place-items: center;
-        padding: 20px;
-        background:
-          linear-gradient(rgba(248, 250, 248, 0.78), rgba(237, 245, 243, 0.86)),
-          radial-gradient(circle at 16% 18%, rgba(244, 185, 66, 0.4), transparent 32%),
-          radial-gradient(circle at 80% 22%, rgba(12, 143, 134, 0.32), transparent 30%);
-        backdrop-filter: blur(18px);
-      }
-
-      .login-box {
-        width: min(430px, 100%);
-        padding: 26px;
-        border: 1px solid rgba(255, 255, 255, 0.82);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: var(--shadow);
-      }
-
-      .login-box h1 {
-        margin-bottom: 10px;
-        font-size: 2.3rem;
-        line-height: 1;
-      }
-
-      .login-box form {
-        margin-top: 20px;
-      }
-
-      .form-message {
-        min-height: 22px;
-        margin: 0;
-        color: var(--coral);
-        font-size: 0.86rem;
-        font-weight: 800;
-      }
-
-      .login-hint {
-        margin: 14px 0 0;
-        color: var(--muted);
-        font-size: 0.82rem;
-        line-height: 1.45;
-      }
-
-      .shell {
-        width: min(1180px, calc(100% - 32px));
-        margin: 0 auto;
-        padding: 34px 0;
-      }
-
-      .app[hidden],
-      .login-screen[hidden],
       [hidden] {
         display: none !important;
       }
 
-      header {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: end;
-        gap: 24px;
-        padding: 12px 0 28px;
-      }
-
-      .eyebrow {
-        margin: 0 0 8px;
-        color: var(--teal-dark);
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      h1 {
+      h1,
+      h2,
+      p,
+      ol {
         margin: 0;
-        max-width: 720px;
-        font-size: clamp(2.25rem, 5vw, 5rem);
-        line-height: 0.96;
-        letter-spacing: 0;
       }
 
-      .clock {
-        min-width: 250px;
-        padding: 18px 20px;
-        border: 1px solid rgba(255, 255, 255, 0.72);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.76);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(20px);
+      ol {
+        padding: 0;
+        list-style: none;
       }
 
-      .header-actions {
-        display: grid;
-        gap: 10px;
+      button,
+      input {
+        font: inherit;
+        color: inherit;
       }
 
-      .user-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        color: var(--muted);
-        font-size: 0.85rem;
-        font-weight: 800;
+      button {
+        cursor: pointer;
       }
 
-      .clock-label {
-        margin: 0 0 6px;
-        color: var(--muted);
-        font-size: 0.84rem;
-        font-weight: 700;
+      button:disabled {
+        cursor: not-allowed;
       }
 
-      .clock-time {
-        font-size: 2rem;
-        font-weight: 850;
-        font-variant-numeric: tabular-nums;
+      :focus-visible {
+        outline: 2px solid var(--evergreen);
+        outline-offset: 2px;
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: minmax(300px, 360px) 1fr;
-        gap: 22px;
-        align-items: start;
+      ::selection {
+        background: var(--marigold-wash);
       }
 
-      .panel,
-      .timeline,
-      .calendar-panel,
-      .history-panel {
-        border: 1px solid rgba(255, 255, 255, 0.82);
-        border-radius: 8px;
-        background: var(--paper);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(18px);
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
       }
 
-      .panel {
-        position: sticky;
-        top: 24px;
-        padding: 22px;
-      }
-
-      .panel h2,
-      .timeline h2,
-      .calendar-panel h2,
-      .history-panel h2 {
-        margin: 0;
-        font-size: 1rem;
-      }
-
-      .subtle {
-        margin: 8px 0 20px;
-        color: var(--muted);
-        line-height: 1.45;
-      }
-
+      /* Forms and buttons */
       form {
         display: grid;
         gap: 14px;
@@ -220,474 +133,1159 @@
 
       label {
         display: grid;
-        gap: 8px;
-        color: #334056;
-        font-size: 0.88rem;
-        font-weight: 750;
+        gap: 6px;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 600;
       }
 
       input {
         width: 100%;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
+        min-height: 44px;
+        padding: 0 13px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface);
         color: var(--ink);
-        padding: 13px 14px;
-        outline: 3px solid transparent;
+        font-size: 0.9375rem;
+        font-weight: 400;
         transition:
-          border-color 160ms ease,
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
+          border-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+
+      input::placeholder {
+        color: var(--ink-faint);
+      }
+
+      input:hover {
+        border-color: var(--ink-faint);
       }
 
       input:focus {
-        border-color: rgba(12, 143, 134, 0.7);
-        outline-color: rgba(12, 143, 134, 0.16);
-        box-shadow: 0 8px 24px rgba(12, 143, 134, 0.11);
+        border-color: var(--evergreen);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(28, 107, 92, 0.18);
       }
 
-      .duration-row {
-        display: grid;
-        grid-template-columns: 1fr 128px;
+      .primary,
+      .secondary,
+      .ghost,
+      .danger,
+      .quick button {
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-control);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1;
+        transition:
+          background 120ms ease,
+          border-color 120ms ease,
+          color 120ms ease;
+      }
+
+      .primary {
+        background: var(--evergreen);
+        color: #fff;
+      }
+
+      .primary:hover {
+        background: var(--evergreen-dark);
+      }
+
+      .secondary {
+        border-color: var(--line-strong);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .secondary:hover {
+        border-color: var(--ink-faint);
+        background: var(--paper);
+      }
+
+      .ghost {
+        min-height: 36px;
+        padding: 0 11px;
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+      }
+
+      .ghost:hover {
+        background: rgba(19, 46, 42, 0.07);
+        color: var(--ink);
+      }
+
+      .danger {
+        min-height: 36px;
+        padding: 0 11px;
+        background: transparent;
+        color: var(--clay);
+        font-size: 0.8125rem;
+      }
+
+      .danger:hover {
+        background: var(--clay-wash);
+      }
+
+      .form-message {
+        min-height: 1.25rem;
+        color: var(--clay);
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      .subtle {
+        color: var(--ink-soft);
+        font-size: 0.9375rem;
+      }
+
+      /* Brand */
+      .brand {
+        display: inline-flex;
+        align-items: center;
         gap: 10px;
-        align-items: end;
+        font-family: var(--display);
+        font-size: 1.0625rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border-radius: 9px;
+        background: var(--evergreen-deep);
+        color: #fff;
+      }
+
+      .brand-mark svg {
+        width: 19px;
+        height: 19px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .brand-mark circle {
+        stroke: var(--marigold);
+      }
+
+      .brand-light .brand-mark {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      /* Sign in */
+      .login-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        overflow-y: auto;
+        background: var(--paper);
+      }
+
+      .login-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        min-height: 100%;
+      }
+
+      .login-story {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 48px;
+        padding: clamp(32px, 5vw, 64px);
+        background: var(--evergreen-deep);
+        color: var(--on-deep);
+      }
+
+      .login-story-copy {
+        max-width: 30rem;
+      }
+
+      .login-story-copy h2 {
+        font-family: var(--display);
+        font-size: clamp(2.75rem, 5.2vw, 4.5rem);
+        font-weight: 650;
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+      }
+
+      .login-story-copy p {
+        max-width: 26rem;
+        margin-top: 22px;
+        color: var(--on-deep-soft);
+        font-size: 1.0625rem;
+      }
+
+      /* A small sample of the timeline, in the same visual language as the app */
+      .sample-rail {
+        display: grid;
+        max-width: 26rem;
+      }
+
+      .sample {
+        position: relative;
+        display: grid;
+        grid-template-columns: 4.75rem 1fr auto;
+        gap: 0 14px;
+        align-items: baseline;
+        padding: 0 0 22px 28px;
+        color: var(--on-deep-soft);
+        font-size: 0.9375rem;
+      }
+
+      .sample:last-child {
+        padding-bottom: 0;
+      }
+
+      .sample::before {
+        position: absolute;
+        top: 0.45rem;
+        bottom: -0.45rem;
+        left: 6px;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.18);
+        content: "";
+      }
+
+      .sample:last-child::before {
+        display: none;
+      }
+
+      .sample::after {
+        position: absolute;
+        top: 0.3rem;
+        left: 0;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        background: var(--evergreen-deep);
+        content: "";
+      }
+
+      .sample-time {
+        font-family: var(--display);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .sample-name {
+        color: var(--on-deep);
+        font-weight: 500;
+      }
+
+      .sample.is-done::after {
+        border-color: #86c7b3;
+        background: #86c7b3;
+      }
+
+      .sample.is-done .sample-name {
+        color: var(--on-deep-soft);
+        text-decoration: line-through;
+      }
+
+      .sample.is-now::after {
+        border-color: var(--marigold);
+        background: var(--marigold);
+        box-shadow: 0 0 0 5px rgba(242, 169, 59, 0.24);
+      }
+
+      .sample.is-now .sample-note {
+        color: var(--marigold);
+        font-weight: 600;
+      }
+
+      .login-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        max-width: 30rem;
+        margin: 0 auto;
+        padding: clamp(32px, 5vw, 64px) clamp(24px, 4vw, 48px);
+      }
+
+      .mobile-brand {
+        display: none;
+        margin-bottom: 40px;
+      }
+
+      .login-box h1 {
+        font-family: var(--display);
+        font-size: clamp(2rem, 3.4vw, 2.75rem);
+        font-weight: 650;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+
+      .login-box .subtle {
+        margin-top: 12px;
+      }
+
+      .login-box form {
+        margin-top: 32px;
+        gap: 16px;
       }
 
       .auth-actions {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
         gap: 10px;
+        margin-top: 4px;
       }
 
-      .quick {
+      .auth-actions .primary {
+        min-height: 48px;
+      }
+
+      .login-hint {
+        margin-top: 20px;
+        color: var(--ink-faint);
+        font-size: 0.8125rem;
+      }
+
+      /* App frame */
+      .shell {
+        width: min(100% - 48px, 1180px);
+        margin: 0 auto;
+        padding: 20px 0 64px;
+      }
+
+      .topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 20px;
+        margin-bottom: 20px;
+      }
+
+      .user-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px 12px;
+        min-width: 0;
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+      }
+
+      #activeUser {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .user-actions {
+        display: flex;
+        gap: 2px;
+      }
+
+      .user-actions button {
+        white-space: nowrap;
+      }
+
+      /* Now band: the one loud element on the page */
+      .now {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: clamp(28px, 4.5vw, 64px);
+        align-items: center;
+        padding: clamp(24px, 3.4vw, 44px);
+        border-radius: var(--radius-band);
+        background: var(--evergreen-deep);
+        color: var(--on-deep);
+      }
+
+      .now :focus-visible {
+        outline-color: var(--marigold);
+      }
+
+      .now-date,
+      .now-zone {
+        color: var(--on-deep-soft);
+        font-size: 0.9375rem;
+      }
+
+      .clock-time {
+        margin: 6px 0 8px;
+        font-family: var(--display);
+        font-size: clamp(4rem, 8.6vw, 6.75rem);
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+        line-height: 0.88;
+        letter-spacing: -0.05em;
+        white-space: nowrap;
+      }
+
+      .clock-meridiem {
+        margin-left: 0.16em;
+        color: var(--on-deep-soft);
+        font-size: 0.3em;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .now-task {
+        min-width: 0;
+        padding-left: clamp(28px, 4.5vw, 64px);
+        border-left: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .now-label {
+        display: inline-flex;
+        align-items: center;
         gap: 8px;
+        color: var(--on-deep-soft);
+        font-size: 0.9375rem;
+        font-weight: 600;
       }
 
-      .quick button,
-      .ghost,
-      .secondary,
-      .primary {
-        border: 0;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 800;
-        transition:
-          transform 150ms ease,
-          box-shadow 150ms ease,
-          background 150ms ease;
+      .now-label::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        content: "";
       }
 
-      .quick button,
-      .ghost,
-      .secondary {
-        min-height: 42px;
-        background: #edf5f3;
-        color: var(--teal-dark);
+      .now-label.is-live {
+        color: var(--marigold);
       }
 
-      .quick button:hover,
-      .ghost:hover,
-      .secondary:hover,
-      .primary:hover {
-        transform: translateY(-1px);
+      .now-title {
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+        font-family: var(--display);
+        font-size: clamp(1.625rem, 2.9vw, 2.375rem);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.025em;
       }
 
-      .ghost {
-        padding: 0 13px;
+      .now-detail {
+        margin-top: 10px;
+        color: var(--on-deep-soft);
+        font-size: 0.9375rem;
       }
 
-      .primary {
-        min-height: 50px;
-        background: var(--teal);
-        color: white;
-        box-shadow: 0 16px 28px rgba(12, 143, 134, 0.24);
+      .now-countdown {
+        margin-right: 0.4em;
+        color: #fff;
+        font-family: var(--display);
+        font-size: 1.375rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
       }
 
-      .danger {
-        min-height: 42px;
-        border: 0;
-        border-radius: 8px;
-        background: #fff0ee;
-        color: #b23a31;
-        cursor: pointer;
-        font-weight: 850;
-        transition:
-          transform 150ms ease,
-          background 150ms ease;
+      .now-countdown:empty {
+        display: none;
       }
 
-      .danger:hover {
-        transform: translateY(-1px);
-        background: #ffe3df;
+      .band-button {
+        min-height: 40px;
+        margin-top: 16px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: background 120ms ease;
       }
 
-      .secondary {
-        padding: 0 14px;
+      .band-button:hover {
+        background: rgba(255, 255, 255, 0.1);
       }
 
-      .actions {
+      /* The plan for the day as one strip: each block is a task, the marker is now */
+      .day-strip {
+        margin-top: 22px;
+      }
+
+      .strip-track {
+        position: relative;
+        height: 12px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .strip-seg {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        min-width: 3px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: inset -2px 0 0 var(--evergreen-deep);
+      }
+
+      .strip-seg.is-past {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .strip-seg.is-done {
+        background: #86c7b3;
+      }
+
+      .strip-seg.is-active {
+        background: var(--marigold);
+      }
+
+      .strip-now {
+        position: absolute;
+        top: -5px;
+        bottom: -5px;
+        width: 2px;
+        margin-left: -1px;
+        border-radius: 1px;
+        background: #fff;
+      }
+
+      .strip-ends {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        color: var(--on-deep-soft);
+        font-size: 0.8125rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Page grid */
+      .grid {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-      }
-
-      .timeline {
-        min-height: 540px;
-        padding: 22px;
-      }
-
-      .workspace {
-        display: grid;
-        gap: 22px;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 28px 36px;
+        align-items: start;
+        margin-top: 32px;
       }
 
       .side-stack {
         display: grid;
-        gap: 22px;
+        gap: 16px;
       }
 
-      .calendar-panel,
-      .history-panel {
-        padding: 18px;
+      .panel {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-panel);
+        background: var(--surface);
       }
 
-      .calendar-top,
-      .section-top {
+      .panel h2 {
+        font-family: var(--display);
+        font-size: 1.0625rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+      }
+
+      /* Add a task */
+      .add-panel form {
+        margin-top: 14px;
+      }
+
+      .duration-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: end;
+      }
+
+      .quick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .quick button {
+        min-height: 34px;
+        padding: 0 13px;
+        border-color: var(--line-strong);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+      }
+
+      .quick button:hover {
+        border-color: var(--evergreen);
+        background: var(--evergreen-wash);
+        color: var(--evergreen-dark);
+      }
+
+      .form-help {
+        color: var(--ink-faint);
+        font-size: 0.8125rem;
+      }
+
+      .add-panel .secondary {
+        width: 100%;
+        min-height: 40px;
+        font-size: 0.875rem;
+      }
+
+      /* Calendar */
+      .calendar-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 14px;
-      }
-
-      .month-title {
-        font-size: 0.95rem;
-        font-weight: 900;
       }
 
       .calendar-controls {
         display: flex;
-        gap: 8px;
+        gap: 4px;
       }
 
       .icon-btn {
-        display: inline-grid;
-        width: 36px;
-        height: 36px;
+        display: grid;
+        width: 34px;
+        height: 34px;
         place-items: center;
-        border: 0;
-        border-radius: 8px;
-        background: #edf5f3;
-        color: var(--teal-dark);
-        cursor: pointer;
-        font-weight: 900;
+        padding: 0;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: var(--ink-soft);
+        font-size: 1.125rem;
+        line-height: 1;
+        transition:
+          background 120ms ease,
+          border-color 120ms ease;
+      }
+
+      .icon-btn:hover {
+        border-color: var(--ink-faint);
+        background: var(--paper);
+        color: var(--ink);
       }
 
       .weekdays,
       .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
+        justify-items: center;
       }
 
       .weekdays {
-        margin-bottom: 8px;
-        color: var(--muted);
-        font-size: 0.72rem;
-        font-weight: 900;
-        text-align: center;
+        margin-top: 14px;
+        color: var(--ink-faint);
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      .calendar-grid {
+        gap: 2px 0;
+        margin-top: 6px;
       }
 
       .calendar-day {
         position: relative;
-        min-height: 42px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border: 1.5px solid transparent;
+        border-radius: 50%;
+        background: transparent;
         color: var(--ink);
-        cursor: pointer;
-        font-weight: 850;
+        font-size: 0.875rem;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        transition: background 120ms ease;
+      }
+
+      .calendar-day:hover {
+        background: var(--paper);
       }
 
       .calendar-day.muted {
-        color: #a1abba;
-        background: rgba(255, 255, 255, 0.56);
+        color: var(--ink-faint);
+        font-weight: 400;
       }
 
       .calendar-day.today {
-        border-color: rgba(244, 185, 66, 0.8);
-      }
-
-      .calendar-day.selected {
-        background: var(--teal);
-        color: white;
+        border-color: var(--ink);
+        font-weight: 700;
       }
 
       .calendar-day.has-tasks::after {
-        content: "";
         position: absolute;
+        bottom: 4px;
         left: 50%;
-        bottom: 6px;
-        width: 6px;
-        height: 6px;
-        border-radius: 999px;
-        background: var(--gold);
-        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        margin-left: -2px;
+        border-radius: 50%;
+        background: var(--evergreen);
+        content: "";
+      }
+
+      .calendar-day.selected {
+        border-color: var(--evergreen);
+        background: var(--evergreen);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .calendar-day.selected.has-tasks::after {
+        background: var(--marigold);
       }
 
       .date-summary {
-        margin: 12px 0 0;
-        color: var(--muted);
-        font-size: 0.84rem;
-        font-weight: 800;
+        margin-top: 12px;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+      }
+
+      /* History */
+      .history-list {
+        display: grid;
+        margin-top: 8px;
+      }
+
+      .history-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0 12px;
+        padding: 11px 0;
+        border-top: 1px solid var(--line);
+        font-size: 0.875rem;
+      }
+
+      .history-item:first-child {
+        border-top: 0;
+      }
+
+      .history-item:last-child {
+        padding-bottom: 0;
+      }
+
+      .history-item strong {
+        overflow-wrap: anywhere;
+        font-weight: 600;
+      }
+
+      .history-item span {
+        grid-column: 1;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+      }
+
+      .history-item .history-done {
+        grid-row: 1;
+        grid-column: 2;
+        align-self: center;
+        color: var(--evergreen);
+        font-weight: 600;
+      }
+
+      .reset-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0 9px;
+      }
+
+      /* Timeline */
+      .timeline {
+        min-width: 0;
       }
 
       .timeline-top {
         display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
         justify-content: space-between;
-        gap: 18px;
-        align-items: center;
-        margin-bottom: 16px;
+        gap: 4px 16px;
+        padding-left: calc(var(--rail-time) + var(--rail-gutter));
       }
 
       .selected-date {
-        color: var(--muted);
-        font-size: 0.84rem;
-        font-weight: 800;
+        font-family: var(--display);
+        font-size: 1.5rem;
+        font-weight: 650;
+        letter-spacing: -0.025em;
       }
 
-      .status-pill {
+      .day-status {
+        color: var(--ink-soft);
+        font-size: 0.875rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .reorder-hint {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        margin-top: 6px;
+        padding-left: calc(var(--rail-time) + var(--rail-gutter));
+        color: var(--ink-faint);
+        font-size: 0.8125rem;
+      }
+
+      .reorder-hint svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .reorder-key {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        min-height: 34px;
-        padding: 0 12px;
-        border-radius: 999px;
-        background: #fff7e3;
-        color: #805d0f;
-        font-size: 0.82rem;
-        font-weight: 850;
+        gap: 6px;
+        color: var(--ink-soft);
+        font-weight: 500;
       }
 
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--gold);
+      .reorder-key::before {
+        content: "";
+      }
+
+      .moving-key::before {
+        width: 12px;
+        height: 10px;
+        border: 1.5px dashed var(--ink);
+        border-radius: 3px;
+      }
+
+      .landing-key::before {
+        width: 14px;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--marigold);
       }
 
       .empty {
-        display: grid;
-        min-height: 420px;
-        place-items: center;
-        border: 1px dashed #cbd8df;
-        border-radius: 8px;
-        color: var(--muted);
+        margin: 20px 0 0 calc(var(--rail-time) + var(--rail-gutter));
+        padding: 36px 24px;
+        border: 1.5px dashed var(--line-strong);
+        border-radius: var(--radius-card);
+        color: var(--ink-soft);
         text-align: center;
-        padding: 28px;
       }
 
       .empty strong {
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         color: var(--ink);
-        font-size: 1.35rem;
-      }
-
-      .day-note {
-        margin-top: 14px;
-        padding: 14px 16px;
-        border: 1px solid rgba(12, 143, 134, 0.18);
-        border-radius: 8px;
-        background: rgba(12, 143, 134, 0.08);
-        color: var(--teal-dark);
-        font-weight: 850;
+        font-family: var(--display);
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
       }
 
       .task-list {
-        display: grid;
-        gap: 12px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
+        margin-top: 20px;
       }
 
-      .history-list {
-        display: grid;
-        gap: 10px;
-        max-height: 260px;
-        overflow: auto;
-        margin: 0;
-        padding: 0;
-        list-style: none;
+      .loading-row {
+        padding: 20px 0 20px calc(var(--rail-time) + var(--rail-gutter));
+        color: var(--ink-soft);
+        font-size: 0.9375rem;
       }
 
-      .reset-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 14px;
-      }
-
-      .history-item {
-        padding: 12px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
-      }
-
-      .history-item strong {
-        display: block;
-        margin-bottom: 4px;
-      }
-
-      .history-item span {
-        color: var(--muted);
-        font-size: 0.82rem;
-        font-weight: 750;
-      }
-
+      /*
+        One task: time on the left, a node on the rail, the card on the right.
+        The rail is real structure: each task starts where the one above ends.
+      */
       .task {
+        position: relative;
         display: grid;
-        grid-template-columns: 86px minmax(0, 1fr) auto;
-        gap: 16px;
-        align-items: center;
-        min-height: 104px;
-        padding: 16px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
+        grid-template-columns: var(--rail-time) var(--rail-gutter) minmax(0, 1fr);
+        padding-bottom: 10px;
       }
 
-      .task.active {
-        border-color: rgba(12, 143, 134, 0.4);
-        box-shadow: 0 16px 38px rgba(12, 143, 134, 0.12);
+      .task:last-child {
+        padding-bottom: 0;
+      }
+
+      .task::before {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(var(--rail-time) + var(--rail-gutter) / 2 - 1px);
+        width: 2px;
+        background: var(--line-strong);
+        content: "";
+      }
+
+      .task:first-child::before {
+        top: 25px;
+      }
+
+      .task:last-child::before {
+        bottom: auto;
+        height: 25px;
+      }
+
+      .task:only-child::before {
+        display: none;
+      }
+
+      .task::after {
+        position: absolute;
+        top: 18px;
+        left: calc(var(--rail-time) + var(--rail-gutter) / 2 - 7px);
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--line-strong);
+        border-radius: 50%;
+        background: var(--paper);
+        content: "";
+      }
+
+      .task.past::after {
+        background: var(--line-strong);
+      }
+
+      .task.done::after {
+        border-color: var(--evergreen);
+        background: var(--evergreen);
+      }
+
+      .task.active::after {
+        border-color: var(--marigold);
+        background: var(--marigold);
+        box-shadow: 0 0 0 5px rgba(242, 169, 59, 0.24);
       }
 
       .time-block {
-        display: grid;
-        gap: 4px;
-        font-variant-numeric: tabular-nums;
+        grid-column: 1;
+        padding-top: 13px;
+        text-align: right;
       }
 
       .start {
-        font-size: 1.18rem;
-        font-weight: 900;
+        display: block;
+        font-family: var(--display);
+        font-size: 1.0625rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
       }
 
       .end {
-        color: var(--muted);
-        font-size: 0.8rem;
-        font-weight: 700;
+        display: block;
+        color: var(--ink-faint);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .task-card {
+        display: grid;
+        grid-column: 3;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 20px;
+        align-items: center;
+        min-width: 0;
+        padding: 13px 12px 13px 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        background: var(--surface);
+      }
+
+      .task.active .task-card {
+        border-color: var(--evergreen);
+        box-shadow: 0 0 0 1px var(--evergreen);
+      }
+
+      .task.past .task-card,
+      .task.done .task-card {
+        background: transparent;
       }
 
       .task-main {
         min-width: 0;
       }
 
+      .task-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
       .task-title {
-        margin: 0 0 10px;
+        padding-top: 1px;
         overflow-wrap: anywhere;
-        font-size: 1.08rem;
-        font-weight: 850;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .task.past .task-title {
+        color: var(--ink-soft);
+      }
+
+      .task.done .task-title {
+        color: var(--ink-faint);
+        text-decoration: line-through;
+      }
+
+      .task-check {
+        display: grid;
+        flex: none;
+        width: 22px;
+        height: 22px;
+        margin-top: 1px;
+        place-items: center;
+        padding: 0;
+        border: 1.5px solid var(--ink-faint);
+        border-radius: 50%;
+        background: transparent;
+        color: transparent;
+        transition:
+          border-color 120ms ease,
+          background 120ms ease,
+          color 120ms ease;
+      }
+
+      .task-check svg {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3.2;
+      }
+
+      .task-check:hover {
+        border-color: var(--evergreen);
+        color: var(--evergreen);
+      }
+
+      .task-check[aria-checked="true"] {
+        border-color: var(--evergreen);
+        background: var(--evergreen);
+        color: #fff;
       }
 
       .meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 2px 14px;
+        margin: 3px 0 0 32px;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
       }
 
       .tag {
-        border-radius: 999px;
-        background: var(--soft);
-        color: #40506a;
-        padding: 5px 9px;
-        font-size: 0.76rem;
-        font-weight: 800;
+        font-variant-numeric: tabular-nums;
       }
 
       .tag.active-tag {
-        background: rgba(12, 143, 134, 0.12);
-        color: var(--teal-dark);
+        color: var(--marigold-ink);
+        font-weight: 600;
+      }
+
+      .tag.done-tag {
+        color: var(--evergreen);
+        font-weight: 600;
       }
 
       .bar {
-        width: 100%;
-        height: 10px;
+        display: none;
+        height: 4px;
+        margin: 10px 0 2px 32px;
         overflow: hidden;
-        border-radius: 999px;
-        background: #e7edf0;
+        border-radius: 2px;
+        background: var(--line);
+      }
+
+      .task.active .bar {
+        display: block;
       }
 
       .fill {
         width: 0%;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, var(--teal), var(--gold));
+        background: var(--evergreen);
         transition: width 450ms linear;
-      }
-
-      .countdown {
-        min-width: 112px;
-        text-align: right;
-        font-size: 1.25rem;
-        font-weight: 900;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .finished {
-        color: var(--coral);
       }
 
       .task-side {
         display: grid;
-        gap: 10px;
+        gap: 4px;
         justify-items: end;
+      }
+
+      .countdown {
+        padding-right: 6px;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .countdown.active {
+        color: var(--ink);
+        font-family: var(--display);
+        font-size: 1.375rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .countdown.finished {
+        color: var(--clay);
+        font-weight: 500;
+      }
+
+      .countdown.done {
+        color: var(--evergreen);
+        font-weight: 600;
       }
 
       .task-actions {
         display: flex;
-        gap: 8px;
+        gap: 2px;
       }
 
       .task-icon {
-        display: inline-grid;
-        width: 36px;
-        height: 36px;
+        display: grid;
+        width: 34px;
+        height: 34px;
         place-items: center;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #f8fbfa;
-        color: #40506a;
-        cursor: pointer;
+        padding: 0;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--ink-faint);
         transition:
-          transform 150ms ease,
-          border-color 150ms ease,
-          color 150ms ease,
-          background 150ms ease;
-      }
-
-      .task-icon:hover {
-        transform: translateY(-1px);
-        border-color: rgba(12, 143, 134, 0.28);
-        color: var(--teal-dark);
-        background: #edf5f3;
-      }
-
-      .task-icon.delete:hover {
-        border-color: rgba(255, 111, 97, 0.34);
-        color: #c44539;
-        background: #fff0ee;
+          background 120ms ease,
+          color 120ms ease;
       }
 
       .task-icon svg {
-        width: 18px;
-        height: 18px;
-        stroke-width: 2.2;
+        width: 17px;
+        height: 17px;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .task-icon:hover {
+        background: rgba(19, 46, 42, 0.07);
+        color: var(--ink);
+      }
+
+      .task-icon.delete:hover {
+        background: var(--clay-wash);
+        color: var(--clay);
+      }
+
+      .task-icon:disabled {
+        background: transparent;
+        color: var(--line-strong);
       }
 
       .task-icon.drag-handle {
@@ -700,1445 +1298,45 @@
         cursor: grabbing;
       }
 
-      .task-icon:disabled {
-        opacity: 0.38;
-        cursor: not-allowed;
-        transform: none;
+      /* Dragging: the moving card gets a dashed outline, the landing spot a marigold line */
+      .task.dragging .task-card {
+        border-style: dashed;
+        border-color: var(--ink);
+        background: var(--surface);
+        box-shadow: 0 10px 24px rgba(19, 46, 42, 0.12);
       }
 
-      .reorder-hint {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        margin: -8px 0 14px;
-        color: #71817c;
-        font-size: 0.75rem;
-        font-weight: 700;
+      .task.drop-before .task-card,
+      .task.drop-after .task-card {
+        position: relative;
       }
 
-      .reorder-hint svg {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 auto;
-        stroke-width: 2;
-      }
-
-      .reorder-key {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 4px 8px;
-        border: 1px solid transparent;
-        border-radius: 999px;
-        background: #fff;
-        font-size: 0.66rem;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-      }
-
-      .reorder-key::before {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        content: "";
-      }
-
-      .moving-key {
-        border-color: rgba(104, 74, 214, 0.2);
-        color: #5638bd;
-      }
-
-      .moving-key::before {
-        background: #684ad6;
-        box-shadow: 0 0 0 3px rgba(104, 74, 214, 0.13);
-      }
-
-      .landing-key {
-        border-color: rgba(213, 120, 0, 0.24);
-        color: #9b5600;
-      }
-
-      .landing-key::before {
-        background: #e39118;
-        box-shadow: 0 0 0 3px rgba(227, 145, 24, 0.15);
-      }
-
-      .sr-only {
+      .task.drop-before .task-card::before,
+      .task.drop-after .task-card::after {
         position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        margin: -1px;
-        padding: 0;
-        border: 0;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-      }
-
-      @media (max-width: 880px) {
-        header,
-        .grid {
-          grid-template-columns: 1fr;
-        }
-
-        .panel {
-          position: static;
-        }
-
-        .clock {
-          min-width: 0;
-        }
-      }
-
-      @media (max-width: 620px) {
-        .shell {
-          width: min(100% - 20px, 1180px);
-          padding-top: 16px;
-        }
-
-        .duration-row,
-        .auth-actions,
-        .actions,
-        .reset-actions,
-        .task {
-          grid-template-columns: 1fr;
-        }
-
-        .countdown {
-          text-align: left;
-        }
-
-        .task-side {
-          justify-items: start;
-        }
-      }
-
-      /* Modern visual refresh */
-      :root {
-        --ink: #172623;
-        --muted: #687976;
-        --soft: #edf3f0;
-        --line: #dfe8e4;
-        --paper: rgba(255, 255, 255, 0.88);
-        --teal: #167c72;
-        --teal-dark: #0f5f58;
-        --gold: #f2ba55;
-        --coral: #ec735f;
-        --forest: #123b3a;
-        --cream: #f6f4ed;
-        --shadow: 0 24px 64px rgba(28, 52, 47, 0.09);
-        --shadow-soft: 0 12px 34px rgba(28, 52, 47, 0.07);
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        position: relative;
-        isolation: isolate;
-        font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-        background:
-          radial-gradient(circle at 5% 4%, rgba(242, 186, 85, 0.18), transparent 23rem),
-          radial-gradient(circle at 94% 12%, rgba(22, 124, 114, 0.13), transparent 25rem),
-          linear-gradient(145deg, #f8f8f4 0%, #f1f5f2 48%, #f7f2eb 100%);
-      }
-
-      body::before {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        background-image:
-          linear-gradient(rgba(18, 59, 58, 0.025) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(18, 59, 58, 0.025) 1px, transparent 1px);
-        background-size: 42px 42px;
-        content: "";
-        mask-image: linear-gradient(to bottom, black, transparent 68%);
-        pointer-events: none;
-      }
-
-      ::selection {
-        background: rgba(22, 124, 114, 0.2);
-        color: var(--forest);
-      }
-
-      button,
-      input {
-        font-family: inherit;
-      }
-
-      button:focus-visible,
-      input:focus-visible {
-        outline: 3px solid rgba(22, 124, 114, 0.24);
-        outline-offset: 2px;
-      }
-
-      .login-screen {
-        overflow-y: auto;
-        place-items: center;
-        padding: 32px;
-        background:
-          radial-gradient(circle at 10% 90%, rgba(242, 186, 85, 0.22), transparent 26rem),
-          radial-gradient(circle at 86% 12%, rgba(92, 170, 157, 0.22), transparent 24rem),
-          #e9efeb;
-        backdrop-filter: none;
-      }
-
-      .login-screen::before,
-      .login-screen::after {
-        position: fixed;
-        width: 18rem;
-        height: 18rem;
-        border: 1px solid rgba(18, 59, 58, 0.08);
-        border-radius: 50%;
-        content: "";
-        pointer-events: none;
-      }
-
-      .login-screen::before {
-        top: -9rem;
-        right: 12%;
-      }
-
-      .login-screen::after {
-        bottom: -11rem;
-        left: 8%;
-        width: 24rem;
-        height: 24rem;
-      }
-
-      .login-shell {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: 1.08fr 0.92fr;
-        width: min(1120px, 100%);
-        min-height: min(720px, calc(100vh - 64px));
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.72);
-        border-radius: 32px;
-        background: #fff;
-        box-shadow:
-          0 36px 90px rgba(18, 59, 58, 0.16),
-          0 3px 12px rgba(18, 59, 58, 0.06);
-      }
-
-      .login-story {
-        position: relative;
-        display: flex;
-        min-width: 0;
-        flex-direction: column;
-        overflow: hidden;
-        padding: 46px 50px 40px;
-        color: #f7fbf8;
-        background:
-          radial-gradient(circle at 84% 22%, rgba(242, 186, 85, 0.24), transparent 15rem),
-          radial-gradient(circle at 12% 84%, rgba(83, 168, 153, 0.25), transparent 20rem),
-          linear-gradient(150deg, #174c49 0%, #123b3a 46%, #0c2d2d 100%);
-      }
-
-      .login-story::before {
-        position: absolute;
-        top: 10%;
-        right: -26%;
-        width: 27rem;
-        height: 27rem;
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 50%;
-        box-shadow:
-          0 0 0 44px rgba(255, 255, 255, 0.025),
-          0 0 0 88px rgba(255, 255, 255, 0.018);
+        right: 0;
+        left: 0;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--marigold);
         content: "";
       }
 
-      .login-story > * {
-        position: relative;
-        z-index: 1;
+      .task.drop-before .task-card::before {
+        top: -8px;
       }
 
-      .brand-lockup {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        width: fit-content;
+      .task.drop-after .task-card::after {
+        bottom: -8px;
       }
 
-      .brand-lockup > span:last-child {
-        display: grid;
-        gap: 1px;
-      }
-
-      .brand-lockup strong {
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 0.92rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-
-      .brand-lockup small {
-        color: var(--muted);
-        font-size: 0.72rem;
-        font-weight: 600;
-      }
-
-      .brand-lockup-light small {
-        color: rgba(232, 244, 239, 0.62);
-      }
-
-      .brand-mark {
-        display: inline-grid;
-        width: 42px;
-        height: 42px;
-        flex: 0 0 auto;
-        place-items: center;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 14px;
-        color: #fff;
-        background: linear-gradient(145deg, #29988c, #126d66);
-        box-shadow: 0 10px 24px rgba(11, 62, 58, 0.2);
-      }
-
-      .brand-mark svg {
-        width: 23px;
-        height: 23px;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 1.8;
-      }
-
-      .login-story-copy {
-        margin: auto 0 34px;
-      }
-
-      .login-story .eyebrow {
-        color: #8ed5c8;
-      }
-
-      .login-story-copy h2 {
-        margin: 0;
-        max-width: 540px;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: clamp(3.1rem, 5vw, 5.2rem);
-        font-weight: 700;
-        line-height: 0.96;
-        letter-spacing: -0.065em;
-      }
-
-      .login-story-copy h2 em {
-        color: #f4c66f;
-        font-family: Georgia, "Times New Roman", serif;
-        font-weight: 400;
-        letter-spacing: -0.045em;
-      }
-
-      .login-story-copy > p:last-child {
-        max-width: 450px;
-        margin: 24px 0 0;
-        color: rgba(232, 244, 239, 0.7);
-        font-size: 1rem;
-        line-height: 1.65;
-      }
-
-      .schedule-preview {
-        padding: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.075);
-        box-shadow: 0 22px 55px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(16px);
-      }
-
-      .preview-topline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-        color: rgba(239, 249, 245, 0.72);
-        font-size: 0.73rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .preview-live {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: #f4ce83;
-      }
-
-      .preview-live i {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #f4c66f;
-        box-shadow: 0 0 0 4px rgba(244, 198, 111, 0.12);
-      }
-
-      .preview-task {
-        display: grid;
-        grid-template-columns: 48px minmax(0, 1fr) auto;
-        gap: 12px;
-        align-items: center;
-        padding: 10px 0;
-      }
-
-      .preview-time {
-        color: rgba(235, 246, 241, 0.54);
-        font-size: 0.75rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .preview-task-copy {
-        display: grid;
-        gap: 3px;
-      }
-
-      .preview-task-copy strong {
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 0.84rem;
-      }
-
-      .preview-task-copy small {
-        color: rgba(235, 246, 241, 0.5);
-        font-size: 0.7rem;
-      }
-
-      .preview-check,
-      .preview-order {
-        display: inline-grid;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        border-radius: 10px;
-        color: #113b39;
-        background: #f4c66f;
-        font-size: 0.73rem;
-        font-weight: 800;
-      }
-
-      .preview-order {
-        color: rgba(235, 246, 241, 0.6);
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .preview-progress {
-        height: 4px;
-        margin: 5px 42px 3px 60px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .preview-progress span {
-        display: block;
-        width: 63%;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, #68c6b7, #f4c66f);
-      }
-
-      .story-footer {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        margin-top: 22px;
-        color: rgba(232, 244, 239, 0.5);
-        font-size: 0.7rem;
-        font-weight: 700;
-      }
-
-      .story-footer span {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-      }
-
-      .story-footer span::before {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: #69c2b3;
-        content: "";
-      }
-
-      .login-box {
-        display: flex;
-        width: auto;
-        flex-direction: column;
-        justify-content: center;
-        padding: 54px 56px;
-        border: 0;
-        border-radius: 0;
-        background: #fff;
-        box-shadow: none;
-      }
-
-      .mobile-brand {
-        display: none;
-      }
-
-      .login-box .eyebrow {
-        margin-bottom: 12px;
-        color: var(--teal);
-      }
-
-      .login-box h1 {
-        max-width: 410px;
-        margin: 0;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: clamp(2.3rem, 3.4vw, 3.35rem);
-        font-weight: 700;
-        line-height: 1.02;
-        letter-spacing: -0.055em;
-      }
-
-      .login-box .subtle {
-        max-width: 390px;
-        margin: 18px 0 30px;
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-
-      .login-box form {
-        gap: 16px;
-        margin-top: 0;
-      }
-
-      .login-box label {
-        gap: 9px;
-        color: #2b3d39;
-        font-size: 0.79rem;
-        font-weight: 700;
-      }
-
-      .login-box input {
-        min-height: 52px;
-        border-color: #dce6e1;
-        border-radius: 14px;
-        background: #f8faf9;
-        padding: 0 16px;
-      }
-
-      .login-box input::placeholder,
-      input::placeholder {
-        color: #9aaba6;
-      }
-
-      .auth-actions {
-        grid-template-columns: repeat(2, 1fr);
-        margin-top: 4px;
-      }
-
-      .auth-actions .primary {
-        display: flex;
-        grid-column: 1 / -1;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 18px;
-      }
-
-      .auth-actions .secondary {
-        grid-column: 1 / -1;
-        min-height: 44px;
-        font-size: 0.79rem;
-      }
-
-      .form-message {
-        min-height: 18px;
-        font-size: 0.79rem;
-      }
-
-      .login-hint {
-        display: flex;
-        align-items: flex-start;
-        gap: 9px;
-        margin-top: 18px;
-        color: #879792;
-        line-height: 1.5;
-      }
-
-      .privacy-dot {
-        width: 7px;
-        height: 7px;
-        flex: 0 0 auto;
-        margin-top: 5px;
-        border-radius: 50%;
-        background: #6bb9aa;
-        box-shadow: 0 0 0 4px rgba(107, 185, 170, 0.12);
-      }
-
-      .shell {
-        width: min(1280px, calc(100% - 52px));
-        padding: 30px 0 52px;
-      }
-
-      header {
-        grid-template-columns: minmax(0, 1fr) 268px;
-        align-items: stretch;
-        gap: 32px;
-        padding: 0 0 32px;
-      }
-
-      .header-copy {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-width: 0;
-        gap: 42px;
-        padding: 5px 0;
-      }
-
-      .hero-copy .eyebrow {
-        margin-bottom: 11px;
-        color: var(--teal);
-      }
-
-      header h1 {
-        max-width: 790px;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: clamp(3.2rem, 5.7vw, 5.7rem);
-        font-weight: 700;
-        line-height: 0.94;
-        letter-spacing: -0.07em;
-      }
-
-      .hero-subtitle {
-        max-width: 590px;
-        margin: 22px 0 0;
-        color: var(--muted);
-        font-size: 1rem;
-        line-height: 1.6;
-      }
-
-      .eyebrow,
-      .section-kicker {
-        font-size: 0.68rem;
-        font-weight: 800;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
-      .header-actions {
-        align-content: end;
-        gap: 12px;
-      }
-
-      .clock {
-        position: relative;
-        min-width: 0;
-        overflow: hidden;
-        padding: 22px 24px;
-        border: 1px solid rgba(255, 255, 255, 0.78);
-        border-radius: 22px;
-        background:
-          linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(247, 250, 248, 0.78));
-        box-shadow: var(--shadow-soft);
-      }
-
-      .clock::after {
-        position: absolute;
-        top: -36px;
-        right: -32px;
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: rgba(242, 186, 85, 0.19);
-        content: "";
-      }
-
-      .clock-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--muted);
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .clock-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--teal);
-        box-shadow: 0 0 0 4px rgba(22, 124, 114, 0.1);
-      }
-
-      .clock-time {
-        position: relative;
-        z-index: 1;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 2.1rem;
-        font-weight: 700;
-        letter-spacing: -0.05em;
-      }
-
-      .user-row {
-        padding: 0 3px 0 7px;
-        font-size: 0.77rem;
-        font-weight: 600;
-      }
-
-      .grid {
-        grid-template-columns: minmax(310px, 360px) minmax(0, 1fr);
-        gap: 24px;
-      }
-
-      .side-stack,
-      .workspace {
-        gap: 24px;
-      }
-
-      .panel,
-      .timeline,
-      .calendar-panel,
-      .history-panel {
-        border: 1px solid rgba(220, 230, 225, 0.92);
-        border-radius: 24px;
-        background: var(--paper);
-        box-shadow: var(--shadow-soft);
-        backdrop-filter: blur(20px);
-      }
-
-      .panel {
-        top: 22px;
-        padding: 24px;
-      }
-
-      .panel::before,
-      .timeline::before {
-        position: absolute;
-        top: 0;
-        right: 26px;
-        left: 26px;
-        height: 2px;
-        border-radius: 0 0 999px 999px;
-        background: linear-gradient(90deg, transparent, rgba(22, 124, 114, 0.42), transparent);
-        content: "";
-      }
-
-      .panel-heading {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .section-icon {
-        display: inline-grid;
-        width: 39px;
-        height: 39px;
-        place-items: center;
-        border-radius: 13px;
-        color: #fff;
-        background: linear-gradient(145deg, #238e82, #146e67);
-        box-shadow: 0 10px 20px rgba(22, 124, 114, 0.2);
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 1.25rem;
-        font-weight: 500;
-      }
-
-      .section-kicker {
-        display: block;
-        margin-bottom: 4px;
-        color: #80918c;
-        font-size: 0.59rem;
-      }
-
-      .panel h2,
-      .timeline h2,
-      .calendar-panel h2,
-      .history-panel h2 {
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 1rem;
-        font-weight: 800;
-        letter-spacing: -0.025em;
-      }
-
-      .panel > .subtle {
-        margin: 18px 0 22px;
-        font-size: 0.86rem;
-        line-height: 1.55;
-      }
-
-      form {
-        gap: 15px;
-      }
-
-      label {
-        gap: 8px;
-        color: #354642;
-        font-size: 0.78rem;
-        font-weight: 700;
-      }
-
-      input {
-        min-height: 49px;
-        border-color: #dce6e2;
-        border-radius: 13px;
-        background: rgba(255, 255, 255, 0.86);
-        padding: 0 14px;
-      }
-
-      input:focus {
-        border-color: rgba(22, 124, 114, 0.6);
-        outline-color: rgba(22, 124, 114, 0.12);
-        box-shadow: 0 8px 26px rgba(22, 124, 114, 0.08);
-      }
-
-      .duration-row {
-        grid-template-columns: minmax(0, 1fr) 132px;
-      }
-
-      .quick {
-        gap: 7px;
-      }
-
-      .quick button,
-      .ghost,
-      .secondary,
-      .primary,
-      .danger {
-        border-radius: 12px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        transition:
-          transform 160ms ease,
-          box-shadow 160ms ease,
-          background 160ms ease,
-          border-color 160ms ease;
-      }
-
-      .quick button,
-      .ghost,
-      .secondary {
-        min-height: 42px;
-        border: 1px solid rgba(22, 124, 114, 0.07);
-        color: var(--teal-dark);
-        background: #edf5f2;
-      }
-
-      .quick button:hover,
-      .ghost:hover,
-      .secondary:hover {
-        border-color: rgba(22, 124, 114, 0.14);
-        background: #e5f1ed;
-        box-shadow: 0 7px 18px rgba(22, 124, 114, 0.08);
-      }
-
-      .primary {
-        min-height: 50px;
-        color: white;
-        background: linear-gradient(135deg, #197f76, #0e665f);
-        box-shadow: 0 14px 26px rgba(22, 124, 114, 0.2);
-      }
-
-      .primary:hover {
-        box-shadow: 0 17px 30px rgba(22, 124, 114, 0.26);
-      }
-
-      .add-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        min-height: 49px;
-        white-space: nowrap;
-      }
-
-      .danger {
-        border: 1px solid rgba(236, 115, 95, 0.08);
-        color: #bd5d4d;
-        background: #fff2ef;
-        font-size: 0.74rem;
-      }
-
-      .danger:hover {
-        background: #ffe9e5;
-      }
-
-      .calendar-panel,
-      .history-panel {
-        padding: 21px;
-      }
-
-      .calendar-top,
-      .section-top {
-        margin-bottom: 17px;
-      }
-
-      .month-title {
-        margin-bottom: 13px;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 0.9rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-
-      .calendar-controls {
-        gap: 6px;
-      }
-
-      .icon-btn {
-        width: 34px;
-        height: 34px;
-        border: 1px solid rgba(22, 124, 114, 0.08);
-        border-radius: 11px;
-        background: #edf5f2;
-        font-size: 1.2rem;
-        transition:
-          transform 150ms ease,
-          background 150ms ease;
-      }
-
-      .icon-btn:hover {
-        transform: translateY(-1px);
-        background: #e3f0ec;
-      }
-
-      .weekdays,
-      .calendar-grid {
-        gap: 5px;
-      }
-
-      .weekdays {
-        margin-bottom: 6px;
-        color: #8d9d98;
-        font-size: 0.63rem;
-        letter-spacing: 0.04em;
-      }
-
-      .calendar-day {
-        min-height: 39px;
-        border-color: transparent;
-        border-radius: 11px;
-        color: #43534f;
-        background: rgba(247, 249, 248, 0.92);
-        font-size: 0.75rem;
-        font-weight: 700;
-        transition:
-          transform 140ms ease,
-          background 140ms ease;
-      }
-
-      .calendar-day:hover {
-        transform: translateY(-1px);
-        background: #eaf3f0;
-      }
-
-      .calendar-day.muted {
-        color: #b6c0bd;
-        background: transparent;
-      }
-
-      .calendar-day.today {
-        border-color: rgba(242, 186, 85, 0.72);
-        box-shadow: inset 0 0 0 1px rgba(242, 186, 85, 0.16);
-      }
-
-      .calendar-day.selected {
-        color: #fff;
-        background: linear-gradient(145deg, #1c857b, #116b64);
-        box-shadow: 0 8px 16px rgba(22, 124, 114, 0.2);
-      }
-
-      .calendar-day.has-tasks::after {
-        bottom: 4px;
-        width: 4px;
-        height: 4px;
-      }
-
-      .date-summary {
-        margin-top: 14px;
-        font-size: 0.74rem;
-        line-height: 1.45;
-      }
-
-      .history-list {
-        gap: 8px;
-        max-height: 278px;
-        padding-right: 3px;
-        scrollbar-color: #cddbd6 transparent;
-        scrollbar-width: thin;
-      }
-
-      .history-item {
-        padding: 12px 13px;
-        border-color: #e3ebe7;
-        border-radius: 13px;
-        background: rgba(255, 255, 255, 0.7);
-      }
-
-      .history-item strong {
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 0.82rem;
-      }
-
-      .history-item span {
-        font-size: 0.73rem;
-        font-weight: 600;
-      }
-
-      .reset-actions {
-        gap: 7px;
-      }
-
-      .timeline {
-        position: relative;
-        min-height: 660px;
-        overflow: hidden;
-        padding: 27px;
-      }
-
-      .timeline::after {
-        position: absolute;
-        top: -90px;
-        right: -100px;
-        width: 260px;
-        height: 260px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(242, 186, 85, 0.12), transparent 68%);
-        content: "";
-        pointer-events: none;
-      }
-
-      .timeline > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .timeline-top {
-        margin-bottom: 23px;
-      }
-
-      .timeline-top h2 {
-        margin-bottom: 4px;
-        font-size: 1.32rem;
-      }
-
-      .selected-date {
-        font-size: 0.77rem;
-        font-weight: 600;
-      }
-
-      .status-pill {
-        min-height: 34px;
-        padding: 0 13px;
-        border: 1px solid rgba(242, 186, 85, 0.17);
-        color: #7a5b20;
-        background: #fff7e8;
-        font-size: 0.73rem;
-        font-weight: 700;
-      }
-
-      .dot {
-        width: 7px;
-        height: 7px;
-        box-shadow: 0 0 0 4px rgba(242, 186, 85, 0.13);
-      }
-
-      .empty {
-        min-height: 520px;
-        border-color: #d8e3df;
-        border-radius: 20px;
-        background:
-          linear-gradient(145deg, rgba(250, 251, 249, 0.9), rgba(245, 249, 246, 0.72));
-      }
-
-      .empty-content {
-        display: grid;
-        max-width: 390px;
-        justify-items: center;
-      }
-
-      .empty-content p {
-        margin: 22px 0 17px;
-      }
-
-      .empty strong {
-        margin-bottom: 9px;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 1.45rem;
-        letter-spacing: -0.035em;
-      }
-
-      .empty-orbit {
-        position: relative;
-        display: inline-grid;
-        width: 96px;
-        height: 96px;
-        place-items: center;
-        border: 1px solid rgba(22, 124, 114, 0.13);
-        border-radius: 50%;
-        box-shadow:
-          0 0 0 12px rgba(22, 124, 114, 0.035),
-          0 0 0 26px rgba(22, 124, 114, 0.025);
-      }
-
-      .empty-orbit::before {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: linear-gradient(145deg, #f6cb7a, #ecaa3d);
-        box-shadow: 0 9px 22px rgba(242, 186, 85, 0.3);
-        content: "";
-      }
-
-      .empty-orbit span {
-        position: absolute;
-        top: 9px;
-        right: 16px;
-        width: 9px;
-        height: 9px;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        background: var(--teal);
-        box-shadow: 0 4px 12px rgba(22, 124, 114, 0.3);
-      }
-
-      .empty-hint {
-        display: inline-flex;
-        align-items: center;
-        min-height: 30px;
-        padding: 0 12px;
-        border: 1px solid #e2ebe7;
-        border-radius: 999px;
-        color: #71817c;
-        background: #fff;
-        font-size: 0.69rem;
-        font-weight: 700;
-      }
-
-      .day-note {
-        padding: 15px 17px;
-        border-radius: 14px;
-        font-size: 0.82rem;
-      }
-
-      .task-list {
-        gap: 10px;
-      }
-
-      .task {
-        position: relative;
-        grid-template-columns: 82px minmax(0, 1fr) auto;
-        min-height: 110px;
-        overflow: hidden;
-        border-color: #e0e9e5;
-        border-radius: 17px;
-        background: rgba(255, 255, 255, 0.84);
-        transition:
-          transform 160ms ease,
-          border-color 160ms ease,
-          box-shadow 160ms ease;
-      }
-
-      .task::before {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 3px;
-        background: #d5e0dc;
-        content: "";
-      }
-
-      .task:hover {
-        transform: translateY(-1px);
-        border-color: #d4e2dc;
-        box-shadow: 0 12px 26px rgba(28, 52, 47, 0.07);
-      }
-
-      .task.active {
-        border-color: rgba(22, 124, 114, 0.27);
-        background:
-          linear-gradient(105deg, rgba(234, 246, 242, 0.88), rgba(255, 255, 255, 0.92));
-        box-shadow: 0 15px 34px rgba(22, 124, 114, 0.1);
-      }
-
-      .task.active::before {
-        background: linear-gradient(to bottom, var(--teal), var(--gold));
-      }
-
-      .task.dragging {
-        z-index: 3;
-        opacity: 1;
-        transform: scale(0.985);
-        border-color: #684ad6;
-        background:
-          linear-gradient(105deg, rgba(242, 238, 255, 0.98), rgba(255, 255, 255, 0.96));
-        box-shadow:
-          0 0 0 4px rgba(104, 74, 214, 0.2),
-          0 18px 36px rgba(81, 55, 170, 0.2);
-      }
-
-      .task.dragging::before {
-        width: 6px;
-        background: #684ad6;
-      }
-
-      .task.dragging::after,
-      .task.drop-before::after,
-      .task.drop-after::after {
-        position: absolute;
-        z-index: 4;
-        top: 9px;
-        right: auto;
-        left: 12px;
-        padding: 5px 9px;
-        border-radius: 999px;
-        color: #fff;
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-        font-size: 0.62rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        line-height: 1;
-        text-transform: uppercase;
-        pointer-events: none;
-      }
-
-      .task.dragging::after {
-        background: #684ad6;
-        box-shadow: 0 5px 12px rgba(81, 55, 170, 0.28);
-        content: "Moving";
-      }
-
-      .task.dragging .drag-handle {
-        border-color: #684ad6;
-        color: #fff;
-        background: #684ad6;
-      }
-
-      .task.drop-before,
-      .task.drop-after {
-        z-index: 2;
-        transform: translateY(0);
-        border-color: #d57800;
-        background:
-          linear-gradient(105deg, rgba(255, 245, 225, 0.98), rgba(255, 255, 255, 0.96));
-      }
-
-      .task.drop-before {
-        box-shadow:
-          inset 0 7px 0 #efa51e,
-          0 0 0 4px rgba(227, 145, 24, 0.26),
-          0 18px 34px rgba(164, 93, 0, 0.16);
-      }
-
-      .task.drop-after {
-        box-shadow:
-          inset 0 -7px 0 #efa51e,
-          0 0 0 4px rgba(227, 145, 24, 0.26),
-          0 18px 34px rgba(164, 93, 0, 0.16);
-      }
-
-      .task.drop-before::before,
-      .task.drop-after::before {
-        width: 6px;
-        background: #efa51e;
-      }
-
-      .task.drop-before::after {
-        background: #b96500;
-        box-shadow: 0 5px 12px rgba(164, 93, 0, 0.22);
-        content: "Drop before ↑";
-      }
-
-      .task.drop-after::after {
-        background: #b96500;
-        box-shadow: 0 5px 12px rgba(164, 93, 0, 0.22);
-        content: "Drop after ↓";
-      }
-
-      .start,
-      .countdown,
-      .task-title {
-        font-family: "Manrope", ui-sans-serif, sans-serif;
-      }
-
-      .start {
-        font-size: 1.04rem;
-        letter-spacing: -0.03em;
-      }
-
-      .end {
-        font-size: 0.7rem;
-        font-weight: 600;
-      }
-
-      .task-title {
-        font-size: 1rem;
-        font-weight: 800;
-        letter-spacing: -0.025em;
-      }
-
-      .tag {
-        padding: 5px 9px;
-        color: #586964;
-        background: #edf3f0;
-        font-size: 0.68rem;
-        font-weight: 700;
-      }
-
-      .tag.active-tag {
-        color: var(--teal-dark);
-        background: rgba(22, 124, 114, 0.11);
-      }
-
-      .bar {
-        height: 7px;
-        background: #e6eeea;
-      }
-
-      .fill {
-        background: linear-gradient(90deg, #1a8177, #4fa99b 70%, #f2ba55);
-      }
-
-      .countdown {
-        min-width: 105px;
-        font-size: 1.08rem;
-        letter-spacing: -0.035em;
-      }
-
-      .task-icon {
-        width: 34px;
-        height: 34px;
-        border-color: #dfe8e4;
-        border-radius: 11px;
-        background: #f7f9f8;
-      }
-
-      .task-icon svg {
-        width: 16px;
-        height: 16px;
-      }
-
-      @media (prefers-reduced-motion: no-preference) {
-        .login-shell {
-          animation: surface-in 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-        }
-
-        .login-story-copy,
-        .schedule-preview {
-          animation: content-in 650ms 120ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-        }
-
-        .panel,
-        .calendar-panel,
-        .history-panel,
-        .timeline {
-          animation: surface-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-        }
-
-        .calendar-panel {
-          animation-delay: 60ms;
-        }
-
-        .history-panel {
-          animation-delay: 120ms;
-        }
-
-        @keyframes surface-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px) scale(0.995);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        @keyframes content-in {
-          from {
-            opacity: 0;
-            transform: translateY(14px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      }
-
-      /* Check off, inline edit, change password */
-      .task-heading {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-
-      .task-heading .task-title {
-        margin: 0;
-        padding-top: 1px;
-      }
-
-      .task-check {
-        display: inline-grid;
-        flex: none;
-        width: 24px;
-        height: 24px;
-        place-items: center;
-        padding: 0;
-        border: 2px solid #b9cbc5;
-        border-radius: 50%;
-        background: #fff;
-        color: transparent;
-        cursor: pointer;
-        transition:
-          border-color 150ms ease,
-          background 150ms ease,
-          color 150ms ease;
-      }
-
-      .task-check svg {
-        width: 13px;
-        height: 13px;
-        stroke-width: 3;
-      }
-
-      .task-check:hover {
-        border-color: var(--teal);
-        color: rgba(22, 124, 114, 0.5);
-      }
-
-      .task-check[aria-checked="true"] {
-        border-color: var(--teal);
-        background: var(--teal);
-        color: #fff;
-      }
-
-      .task.done::before {
-        background: var(--teal);
-      }
-
-      .task.done .task-title {
-        color: var(--muted);
-        text-decoration: line-through;
-        text-decoration-color: rgba(104, 121, 118, 0.55);
-      }
-
-      .tag.done-tag {
-        color: var(--teal-dark);
-        background: rgba(22, 124, 114, 0.11);
-      }
-
-      .countdown.done {
-        color: var(--teal-dark);
-      }
-
+      /* Edit inside the card */
       .task-edit {
         gap: 8px;
       }
 
       .task-edit input {
         min-height: 40px;
-        padding: 0 12px;
-        border-radius: 11px;
-        font-size: 0.9rem;
       }
 
       .task-edit-row {
@@ -2154,57 +1352,46 @@
 
       .task-edit-unit {
         margin-right: auto;
-        color: var(--muted);
-        font-size: 0.78rem;
-        font-weight: 700;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
       }
 
       .task-edit-row button {
         min-height: 40px;
-        padding: 0 15px;
-        font-size: 0.8rem;
+        font-size: 0.875rem;
       }
 
-      .task-edit-row .primary {
-        box-shadow: none;
+      .day-note {
+        margin: 16px 0 0 calc(var(--rail-time) + var(--rail-gutter));
+        color: var(--evergreen);
+        font-size: 0.9375rem;
+        font-weight: 600;
       }
 
-      .user-row {
-        flex-wrap: wrap;
-      }
-
-      .user-actions {
-        display: flex;
-        gap: 8px;
-        margin-left: auto;
-      }
-
-      .user-actions button {
-        white-space: nowrap;
-      }
-
+      /* Change password */
       .password-dialog {
         width: min(100% - 32px, 400px);
-        padding: 26px;
+        padding: 24px;
         border: 1px solid var(--line);
-        border-radius: 20px;
-        background: #fff;
+        border-radius: var(--radius-panel);
+        background: var(--surface);
         color: var(--ink);
-        box-shadow: var(--shadow);
+        box-shadow: 0 24px 64px rgba(15, 56, 50, 0.22);
       }
 
       .password-dialog::backdrop {
-        background: rgba(18, 59, 58, 0.38);
+        background: rgba(15, 56, 50, 0.45);
       }
 
       .password-dialog h2 {
-        margin: 0 0 6px;
-        font-size: 1.25rem;
-        letter-spacing: -0.025em;
+        font-family: var(--display);
+        font-size: 1.375rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
       }
 
       .password-dialog .subtle {
-        margin: 0 0 18px;
+        margin: 6px 0 18px;
       }
 
       .dialog-actions {
@@ -2213,230 +1400,228 @@
         gap: 10px;
       }
 
-      .dialog-actions .primary {
-        min-height: 44px;
-      }
-
       .dialog-actions .ghost {
         min-height: 44px;
+        border-color: var(--line-strong);
       }
 
-      @media (max-width: 1000px) {
-        .login-story {
-          padding-right: 38px;
-          padding-left: 38px;
+      /* The only motion that runs on its own: the "now" node breathes */
+      @media (prefers-reduced-motion: no-preference) {
+        .task.active::after {
+          animation: now-pulse 2.6s ease-in-out infinite;
         }
 
-        .login-box {
-          padding-right: 40px;
-          padding-left: 40px;
-        }
-
-        .login-story-copy h2 {
-          font-size: clamp(2.8rem, 5vw, 4.2rem);
-        }
-      }
-
-      @media (max-width: 880px) {
-        .shell {
-          width: min(100% - 32px, 760px);
-          padding-top: 22px;
-        }
-
-        header {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 24px;
-        }
-
-        .grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .header-copy {
-          gap: 46px;
-        }
-
-        .header-actions {
-          grid-template-columns: minmax(0, 1fr) auto;
-          align-items: center;
-        }
-
-        .user-row {
-          display: grid;
-          justify-items: end;
-        }
-
-        .panel {
-          position: static;
-        }
-
-        .clock {
-          min-width: 0;
+        @keyframes now-pulse {
+          0%,
+          100% {
+            box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.26);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(242, 169, 59, 0.08);
+          }
         }
       }
 
-      @media (max-width: 840px) {
-        .login-screen {
-          padding: 20px;
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
         }
+      }
 
+      /* Tablet: sidebar moves under the timeline's add form */
+      @media (max-width: 940px) {
         .login-shell {
-          display: block;
-          width: min(520px, 100%);
-          min-height: 0;
-          border-radius: 26px;
+          grid-template-columns: minmax(0, 1fr);
         }
 
         .login-story {
           display: none;
         }
 
-        .login-box {
-          min-height: min(680px, calc(100vh - 40px));
-          padding: 44px;
-        }
-
         .mobile-brand {
-          display: flex;
-          align-items: center;
-          gap: 11px;
-          margin-bottom: auto;
-          padding-bottom: 44px;
-          font-family: "Manrope", ui-sans-serif, sans-serif;
-          font-size: 0.9rem;
-          font-weight: 800;
+          display: inline-flex;
         }
 
-        .login-box .login-hint {
-          margin-top: auto;
-          padding-top: 28px;
-        }
-      }
-
-      @media (max-width: 620px) {
-        body::before {
-          background-size: 32px 32px;
+        .grid {
+          gap: 16px;
+          margin-top: 20px;
         }
 
-        .shell {
-          width: min(100% - 20px, 600px);
-          padding-bottom: 28px;
+        .side-stack {
+          display: contents;
         }
 
-        header {
-          padding-bottom: 24px;
-        }
-
-        .header-copy {
-          gap: 38px;
-        }
-
-        header h1 {
-          font-size: clamp(2.65rem, 14vw, 4.15rem);
-        }
-
-        .hero-subtitle {
-          margin-top: 16px;
-          font-size: 0.9rem;
-        }
-
-        .header-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .user-row {
-          display: flex;
-          justify-items: initial;
-        }
-
-        .clock {
-          padding: 19px 20px;
-        }
-
-        .login-screen {
-          align-items: start;
-          padding: 10px;
-        }
-
-        .login-shell {
-          border-radius: 22px;
-        }
-
-        .login-box {
-          min-height: calc(100vh - 20px);
-          padding: 30px 24px;
-        }
-
-        .login-box h1 {
-          font-size: clamp(2.15rem, 11vw, 2.8rem);
-        }
-
-        .auth-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .auth-actions .primary {
-          grid-column: auto;
-        }
-
-        .duration-row,
-        .task {
-          grid-template-columns: 1fr;
-        }
-
-        .panel,
-        .timeline,
-        .calendar-panel,
-        .history-panel {
-          border-radius: 20px;
+        .add-panel {
+          order: 1;
         }
 
         .timeline {
-          min-height: 540px;
-          padding: 20px;
+          order: 2;
+          margin: 12px 0;
         }
 
-        .timeline-top {
-          align-items: flex-start;
+        .calendar-panel {
+          order: 3;
         }
 
-        .empty {
-          min-height: 400px;
-          padding: 22px;
+        .history-panel {
+          order: 4;
         }
 
-        .task {
-          gap: 12px;
-          padding: 17px;
+        .reset-actions {
+          order: 5;
         }
 
-        .task-side {
-          grid-template-columns: 1fr auto;
-          align-items: center;
-          justify-items: stretch;
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .countdown {
-          text-align: left;
+        .add-panel,
+        .timeline,
+        .reset-actions {
+          grid-column: 1 / -1;
+        }
+
+        .add-panel form {
+          grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+          align-items: end;
+        }
+
+        .add-panel .quick,
+        .add-panel .form-help {
+          grid-column: 1 / -1;
+        }
+
+        .add-panel .secondary {
+          grid-column: 1 / -1;
+          width: auto;
+          justify-self: start;
         }
       }
 
-      @media (max-width: 390px) {
-        .login-box {
-          padding-right: 20px;
-          padding-left: 20px;
+      /* Phone */
+      @media (max-width: 640px) {
+        :root {
+          --rail-time: 0px;
+          --rail-gutter: 26px;
+          --radius-band: 22px;
         }
 
-        .quick {
-          grid-template-columns: 1fr;
+        .shell {
+          width: min(100% - 28px, 1180px);
+          padding-top: 14px;
         }
 
-        .timeline-top {
-          display: grid;
+        .grid,
+        .add-panel form {
+          grid-template-columns: minmax(0, 1fr);
         }
 
-        .status-pill {
-          width: fit-content;
+        .add-panel .secondary {
+          width: 100%;
+        }
+
+        .topbar {
+          margin-bottom: 14px;
+        }
+
+        .user-row {
+          flex-wrap: nowrap;
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        #activeUser {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .user-actions {
+          margin-right: -8px;
+        }
+
+        .now {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 20px;
+        }
+
+        .now-task {
+          padding: 20px 0 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.16);
+          border-left: 0;
+        }
+
+        .timeline-top,
+        .reorder-hint {
+          padding-left: 0;
+        }
+
+        .empty,
+        .day-note {
+          margin-left: 0;
+        }
+
+        .loading-row {
+          padding-left: 0;
+        }
+
+        .task {
+          grid-template-columns: var(--rail-gutter) minmax(0, 1fr);
+          padding-bottom: 14px;
+        }
+
+        .task::before {
+          left: 6px;
+        }
+
+        .task:first-child::before {
+          top: 11px;
+        }
+
+        .task:last-child::before {
+          height: 11px;
+        }
+
+        .task::after {
+          top: 4px;
+          left: 0;
+        }
+
+        .time-block {
+          display: flex;
+          grid-column: 2;
+          gap: 8px;
+          align-items: baseline;
+          padding: 0 0 6px;
+          text-align: left;
+        }
+
+        .task-card {
+          grid-column: 2;
+          grid-template-columns: minmax(0, 1fr);
+          padding: 13px 12px 8px 14px;
+        }
+
+        .task-side {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 4px 8px;
+          margin-left: 32px;
+        }
+
+        .task-icon {
+          width: 40px;
+          height: 40px;
+        }
+
+        .task-actions {
+          margin-left: auto;
+        }
+
+        .countdown {
+          padding-right: 0;
         }
       }
     </style>
@@ -2445,70 +1630,53 @@
     <section class="login-screen" id="loginScreen">
       <div class="login-shell">
         <aside class="login-story" aria-hidden="true">
-          <div class="brand-lockup brand-lockup-light">
+          <div class="brand brand-light">
             <span class="brand-mark">
               <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 6v6l3.5 2" />
                 <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" />
               </svg>
             </span>
-            <span>
-              <strong>Productive Day</strong>
-              <small>Intentional time, beautifully planned</small>
-            </span>
+            <span>Productive Day</span>
           </div>
 
           <div class="login-story-copy">
-            <p class="eyebrow">Plan with intention</p>
-            <h2>Make time feel<br /><em>like yours.</em></h2>
+            <h2>Make time feel like yours.</h2>
             <p>
               Shape a calm, focused day with a live schedule that keeps every
               task moving at the right pace.
             </p>
           </div>
 
-          <div class="schedule-preview">
-            <div class="preview-topline">
-              <span>Today&rsquo;s flow</span>
-              <span class="preview-live"><i></i> Live</span>
-            </div>
-            <div class="preview-task preview-task-active">
-              <span class="preview-time">9:30</span>
-              <span class="preview-task-copy">
-                <strong>Deep work session</strong>
-                <small>In progress &middot; 42 min left</small>
-              </span>
-              <span class="preview-check">&#10003;</span>
-            </div>
-            <div class="preview-progress"><span></span></div>
-            <div class="preview-task">
-              <span class="preview-time">10:30</span>
-              <span class="preview-task-copy">
-                <strong>Project check-in</strong>
-                <small>Up next &middot; 30 min</small>
-              </span>
-              <span class="preview-order">02</span>
-            </div>
-          </div>
-
-          <div class="story-footer">
-            <span>Live timeline</span>
-            <span>Calendar history</span>
-            <span>Cloud sync</span>
-          </div>
+          <ol class="sample-rail">
+            <li class="sample is-done">
+              <span class="sample-time">9:30am</span>
+              <span class="sample-name">Deep work session</span>
+              <span class="sample-note">Done</span>
+            </li>
+            <li class="sample is-now">
+              <span class="sample-time">10:30am</span>
+              <span class="sample-name">Project check-in</span>
+              <span class="sample-note">18 min left</span>
+            </li>
+            <li class="sample">
+              <span class="sample-time">11:00am</span>
+              <span class="sample-name">Lunch walk</span>
+              <span class="sample-note">45 min</span>
+            </li>
+          </ol>
         </aside>
 
         <div class="login-box">
-          <div class="mobile-brand">
+          <div class="brand mobile-brand">
             <span class="brand-mark">
               <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 6v6l3.5 2" />
                 <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" />
               </svg>
             </span>
-            <strong>Productive Day</strong>
+            <span>Productive Day</span>
           </div>
-          <p class="eyebrow">Welcome back</p>
           <h1>Pick up where you left off.</h1>
           <p class="subtle">
             Sign in to open your saved timeline, calendar, and activity
@@ -2537,17 +1705,14 @@
               />
             </label>
             <div class="auth-actions">
-              <button class="primary" type="submit">
-                <span>Sign in</span><span aria-hidden="true">&rarr;</span>
-              </button>
+              <button class="primary" type="submit">Sign in</button>
               <button class="secondary" id="createAccountButton" type="button" hidden>
                 Create account
               </button>
             </div>
-            <p class="form-message" id="loginMessage"></p>
+            <p class="form-message" id="loginMessage" aria-live="polite"></p>
           </form>
           <p class="login-hint">
-            <span class="privacy-dot"></span>
             Your account and tasks sync privately through Neon Postgres.
           </p>
         </div>
@@ -2555,58 +1720,52 @@
     </section>
 
     <main class="shell app" id="app" hidden>
-      <header>
-        <section class="header-copy">
-          <div class="brand-lockup">
-            <span class="brand-mark">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 6v6l3.5 2" />
-                <circle cx="12" cy="12" r="8.5" />
-              </svg>
-            </span>
-            <span>
-              <strong>Productive Day</strong>
-              <small>Pacific time planner</small>
-            </span>
-          </div>
-          <div class="hero-copy">
-            <p class="eyebrow">Your day, in motion</p>
-            <h1>Build a day that moves with you.</h1>
-            <p class="hero-subtitle">
-              Plan one focused block at a time and let the timeline keep pace.
-            </p>
-          </div>
-        </section>
-        <section class="header-actions">
-          <aside class="clock" aria-label="Current Pacific time">
-            <p class="clock-label"><span class="clock-dot"></span> Pacific time</p>
-            <div class="clock-time" id="clock">--:-- --</div>
-          </aside>
-          <div class="user-row">
-            <span id="activeUser">Signed in</span>
-            <span class="user-actions">
-              <button class="ghost" id="changePasswordButton" type="button">Change password</button>
-              <button class="ghost" id="logoutButton" type="button">Log out</button>
-            </span>
-          </div>
-        </section>
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.5V12l3 2" />
+            </svg>
+          </span>
+          <span>Productive Day</span>
+        </div>
+        <div class="user-row">
+          <span id="activeUser">Signed in</span>
+          <span class="user-actions">
+            <button class="ghost" id="changePasswordButton" type="button">Change password</button>
+            <button class="ghost" id="logoutButton" type="button">Log out</button>
+          </span>
+        </div>
       </header>
 
-      <section class="grid">
-        <div class="side-stack">
-          <aside class="panel">
-            <div class="panel-heading">
-              <span class="section-icon" aria-hidden="true">+</span>
-              <span>
-                <span class="section-kicker">New time block</span>
-                <h2>Add a task</h2>
-              </span>
+      <section class="now" aria-label="Right now">
+        <div class="now-clock">
+          <p class="now-date" id="nowDate">Today</p>
+          <div class="clock-time" id="clock">--:--</div>
+          <p class="now-zone">Pacific time</p>
+        </div>
+        <div class="now-task">
+          <p class="now-label" id="nowLabel">Today</p>
+          <p class="now-title" id="nowTitle">Loading your day</p>
+          <p class="now-detail">
+            <span class="now-countdown" id="nowCountdown"></span><span id="nowDetail"></span>
+          </p>
+          <button class="band-button" id="todayButton" type="button" hidden>Back to today</button>
+          <div class="day-strip" id="dayStrip" aria-hidden="true" hidden>
+            <div class="strip-track" id="stripTrack"></div>
+            <div class="strip-ends">
+              <span id="stripStart"></span>
+              <span id="stripEnd"></span>
             </div>
-            <p class="subtle">
-              Each task starts when the previous one ends, with a live timer for
-              the task currently in motion.
-            </p>
+          </div>
+        </div>
+      </section>
 
+      <div class="grid">
+        <div class="side-stack">
+          <section class="panel add-panel">
+            <h2>Add a task</h2>
             <form id="taskForm">
               <label>
                 Task name
@@ -2621,7 +1780,7 @@
 
               <div class="duration-row">
                 <label>
-                  Duration
+                  Minutes
                   <input
                     id="taskDuration"
                     type="number"
@@ -2631,9 +1790,7 @@
                     required
                   />
                 </label>
-                <button class="secondary add-button" type="submit">
-                  Add task <span aria-hidden="true">&rarr;</span>
-                </button>
+                <button class="primary add-button" type="submit">Add task</button>
               </div>
 
               <div class="quick" aria-label="Quick duration buttons">
@@ -2642,92 +1799,66 @@
                 <button type="button" data-minutes="45">45 min</button>
               </div>
 
-              <button class="primary" type="button" id="finishDay">
+              <p class="form-help">Each task starts when the one before it ends.</p>
+
+              <button class="secondary" type="button" id="finishDay">
                 Wrap up the day
               </button>
             </form>
-          </aside>
+          </section>
 
-          <aside class="calendar-panel">
+          <section class="panel calendar-panel">
             <div class="calendar-top">
-              <div>
-                <span class="section-kicker">Browse your rhythm</span>
-                <h2>Calendar</h2>
-              </div>
+              <h2 class="month-title" id="monthTitle">Month</h2>
               <div class="calendar-controls">
                 <button class="icon-btn" id="prevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
                 <button class="icon-btn" id="nextMonth" type="button" aria-label="Next month">&rsaquo;</button>
               </div>
             </div>
-            <div class="month-title" id="monthTitle">Month</div>
             <div class="weekdays" aria-hidden="true">
               <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
             <p class="date-summary" id="dateSummary"></p>
-          </aside>
-
-          <aside class="history-panel">
-            <div class="section-top">
-              <div>
-                <span class="section-kicker">Recent momentum</span>
-                <h2>Activity history</h2>
-              </div>
-              <button class="ghost" id="todayButton" type="button">Today</button>
-            </div>
-            <ol class="history-list" id="historyList"></ol>
-            <div class="reset-actions">
-              <button class="danger" id="resetDayButton" type="button">
-                Reset this day
-              </button>
-              <button class="danger" id="resetAllButton" type="button">
-                Reset all
-              </button>
-            </div>
-          </aside>
-        </div>
-
-        <div class="workspace">
-          <section class="timeline">
-            <div class="timeline-top">
-              <div>
-                <span class="section-kicker">Your schedule</span>
-                <h2>Timeline</h2>
-                <div class="selected-date" id="selectedDateLabel">Today</div>
-              </div>
-              <span class="status-pill"><span class="dot"></span><span id="status">Ready</span></span>
-            </div>
-
-            <p class="reorder-hint" id="reorderHint" hidden>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
-              </svg>
-              <span>Drag a task to a new position. Following times update automatically.</span>
-              <span class="reorder-key moving-key">Moving task</span>
-              <span class="reorder-key landing-key">Landing spot</span>
-            </p>
-            <p class="sr-only" id="reorderAnnouncement" aria-live="polite"></p>
-
-            <div id="empty" class="empty">
-              <div class="empty-content">
-                <span class="empty-orbit" aria-hidden="true">
-                  <span></span>
-                </span>
-                <p>
-                  <strong>Your day has room to breathe.</strong>
-                  Add a task when you are ready to begin.
-                </p>
-                <span class="empty-hint">Start with one focused block</span>
-              </div>
-            </div>
-
-            <ol class="task-list" id="taskList"></ol>
-            <div class="day-note" id="dayNote" hidden>
-              Enjoy your productive day.
-            </div>
           </section>
+
+          <section class="panel history-panel">
+            <h2>Activity history</h2>
+            <ol class="history-list" id="historyList"></ol>
+          </section>
+
+          <div class="reset-actions">
+            <button class="danger" id="resetDayButton" type="button">Reset this day</button>
+            <button class="danger" id="resetAllButton" type="button">Reset all</button>
+          </div>
         </div>
-      </section>
+
+        <section class="timeline" aria-labelledby="selectedDateLabel">
+          <div class="timeline-top">
+            <h2 class="selected-date" id="selectedDateLabel">Today</h2>
+            <p class="day-status" id="status"></p>
+          </div>
+
+          <p class="reorder-hint" id="reorderHint" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
+            </svg>
+            <span>Drag a task to a new position. Following times update automatically.</span>
+            <span class="reorder-key moving-key">Moving task</span>
+            <span class="reorder-key landing-key">Landing spot</span>
+          </p>
+          <p class="sr-only" id="reorderAnnouncement" aria-live="polite"></p>
+
+          <div id="empty" class="empty">
+            <p><strong>Your day has room to breathe.</strong> Add a task when you are ready to begin.</p>
+          </div>
+
+          <ol class="task-list" id="taskList"></ol>
+          <div class="day-note" id="dayNote" hidden>
+            Enjoy your productive day.
+          </div>
+        </section>
+      </div>
     </main>
 
     <dialog class="password-dialog" id="passwordDialog" aria-labelledby="passwordDialogTitle">
@@ -2799,6 +1930,15 @@
       const taskDuration = document.querySelector("#taskDuration");
       const taskList = document.querySelector("#taskList");
       const clock = document.querySelector("#clock");
+      const nowDate = document.querySelector("#nowDate");
+      const nowLabel = document.querySelector("#nowLabel");
+      const nowTitle = document.querySelector("#nowTitle");
+      const nowCountdown = document.querySelector("#nowCountdown");
+      const nowDetail = document.querySelector("#nowDetail");
+      const dayStrip = document.querySelector("#dayStrip");
+      const stripTrack = document.querySelector("#stripTrack");
+      const stripStart = document.querySelector("#stripStart");
+      const stripEnd = document.querySelector("#stripEnd");
       const empty = document.querySelector("#empty");
       const statusText = document.querySelector("#status");
       const finishDay = document.querySelector("#finishDay");
@@ -2828,6 +1968,9 @@
       let reorderInFlight = false;
       let editingTaskId = null;
       let lastStructure = "";
+      let loadError = false;
+      let clockText = "";
+      let stripRange = null;
 
       const pacificFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
@@ -2839,6 +1982,17 @@
         month: "long",
         day: "numeric",
         year: "numeric",
+      });
+      const todayFormatter = new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        timeZone: "America/Los_Angeles",
+      });
+      const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
       });
       const monthFormatter = new Intl.DateTimeFormat("en-US", {
         month: "long",
@@ -2897,7 +2051,7 @@
       }
 
       function formatTime(date) {
-        return pacificFormatter.format(date).replace(" ", "").toLowerCase();
+        return pacificFormatter.format(date).replace(/\s/g, "").toLowerCase();
       }
 
       function formatDuration(totalSeconds) {
@@ -2962,9 +2116,9 @@
           tasks = (data.tasks || []).map(normalizeTask);
           activityDates = new Set((data.dates || []).map((row) => row.task_date));
           historyEntries = (data.history || []).map(normalizeTask);
+          loadError = false;
         } catch (error) {
-          loginMessage.textContent =
-            "Could not load tasks. Check that the Neon database is configured.";
+          loadError = true;
           tasks = [];
           activityDates = new Set();
           historyEntries = [];
@@ -3258,13 +2412,16 @@
       // so buttons and focus stay put. Redraws fully when a task changes state.
       function tick() {
         const current = now();
-        clock.textContent = formatTime(current);
+        setClock(current);
 
         if (!session || isLoading) return;
         if (structureKey(current) !== lastStructure) {
           render();
           return;
         }
+
+        renderNow(current);
+        positionStripNow(current);
 
         const tasksById = new Map(tasks.map((task) => [String(task.id), task]));
         taskList.querySelectorAll(".task[data-task-id]").forEach((element) => {
@@ -3281,26 +2438,54 @@
         });
       }
 
+      function setText(element, text) {
+        if (element.textContent !== text) element.textContent = text;
+      }
+
+      function setClock(current) {
+        const text = formatTime(current);
+        if (text === clockText) return;
+
+        clockText = text;
+        clock.innerHTML = `${text.slice(0, -2)}<span class="clock-meridiem">${text.slice(-2)}</span>`;
+        setText(nowDate, todayFormatter.format(current));
+      }
+
+      function formatMinutes(total) {
+        const hours = Math.floor(total / 60);
+        const minutes = total % 60;
+        if (hours === 0) return `${minutes} min`;
+        return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes} min`;
+      }
+
       function render() {
         const current = now();
-        clock.textContent = formatTime(current);
+        setClock(current);
 
         if (!session) return;
 
-        empty.hidden = tasks.length > 0;
+        const showLoading = isLoading && tasks.length === 0;
+        empty.hidden = tasks.length > 0 || showLoading;
         dayNote.hidden = !selectedDoneAdding() || tasks.length === 0;
         reorderHint.hidden = tasks.length < 2;
-        selectedDateLabel.textContent = dateLabelFormatter.format(dateFromKey(selectedDate));
+        selectedDateLabel.textContent = isToday(selectedDate)
+          ? "Today"
+          : dateLabelFormatter.format(dateFromKey(selectedDate));
+        todayButton.hidden = isToday(selectedDate);
+
+        taskList.setAttribute("aria-busy", String(isLoading));
 
         if (!draggedTaskId) {
           const draft = captureEditor();
-          taskList.innerHTML = isLoading
-            ? `<li class="history-item"><strong>Loading timeline</strong><span>Fetching your saved tasks.</span></li>`
+          taskList.innerHTML = showLoading
+            ? `<li class="loading-row">Loading your timeline</li>`
             : tasks.map((task) => renderTask(task, current)).join("");
           restoreEditor(draft);
         }
         lastStructure = structureKey(current);
-        renderStatus(tasks, current);
+        renderStatus();
+        renderNow(current);
+        renderDayStrip(current);
         renderCalendar();
         renderHistory();
 
@@ -3308,6 +2493,136 @@
           tasks.length === 0
             ? "No activities saved for this day."
             : `${tasks.length} saved ${tasks.length === 1 ? "activity" : "activities"} for this day.`;
+      }
+
+      // What the band at the top says: the task running now, the next one, or where the day stands.
+      function nowView(current) {
+        if (loadError) {
+          return {
+            label: "Not loaded",
+            title: "Your tasks did not load.",
+            detail: "Check your connection, then reload the page.",
+          };
+        }
+
+        if (isLoading && tasks.length === 0) {
+          return { label: "Today", title: "Loading your day", detail: "" };
+        }
+
+        if (!isToday(selectedDate)) {
+          return {
+            label: shortDateFormatter.format(dateFromKey(selectedDate)),
+            title:
+              tasks.length === 0
+                ? "Nothing planned for this day."
+                : `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"} planned, ${formatMinutes(
+                    tasks.reduce((sum, task) => sum + Number(task.minutes), 0),
+                  )}`,
+            detail: "The clock still shows the time right now.",
+          };
+        }
+
+        const open = tasks.filter((task) => !task.done);
+        const active = open.find((task) => taskStatus(task, current) === "active");
+        const queued = open.find((task) => taskStatus(task, current) === "queued");
+
+        if (active) {
+          const endAt = new Date(active.endAt);
+          return {
+            live: true,
+            label: "Now",
+            title: active.name,
+            countdown: formatDuration((endAt - current) / 1000),
+            detail: `left, ends at ${formatTime(endAt)}`,
+          };
+        }
+
+        if (queued) {
+          const startAt = new Date(queued.startAt);
+          return {
+            label: "Up next",
+            title: queued.name,
+            countdown: formatDuration((startAt - current) / 1000),
+            detail: `until it starts at ${formatTime(startAt)}`,
+          };
+        }
+
+        if (open.length > 0) {
+          return {
+            label: "Nothing running",
+            title: `${open.length} ${open.length === 1 ? "task is" : "tasks are"} still open`,
+            detail: "Check them off, or move one to the end to reschedule it.",
+          };
+        }
+
+        if (tasks.length > 0) {
+          return {
+            label: "Today",
+            title: "Everything is checked off.",
+            detail: "Add a task if your plans change.",
+          };
+        }
+
+        return {
+          label: "Today",
+          title: "Nothing planned yet.",
+          detail: "Add a task to start your timeline.",
+        };
+      }
+
+      function renderNow(current) {
+        const view = nowView(current);
+        setText(nowLabel, view.label);
+        nowLabel.classList.toggle("is-live", Boolean(view.live));
+        setText(nowTitle, view.title);
+        setText(nowCountdown, view.countdown || "");
+        setText(nowDetail, view.detail);
+      }
+
+      // The whole plan as one strip: one block per task, sized by its length.
+      function renderDayStrip(current) {
+        if (tasks.length === 0 || loadError) {
+          dayStrip.hidden = true;
+          stripRange = null;
+          return;
+        }
+
+        const from = Math.min(...tasks.map((task) => new Date(task.startAt).getTime()));
+        const to = Math.max(...tasks.map((task) => new Date(task.endAt).getTime()));
+        const span = Math.max(to - from, 60 * 1000);
+        stripRange = { from, span };
+
+        stripTrack.innerHTML =
+          tasks
+            .map((task) => {
+              const view = taskView(task, current);
+              const state = task.done
+                ? "is-done"
+                : view.state === "active"
+                  ? "is-active"
+                  : view.state === "finished"
+                    ? "is-past"
+                    : "";
+              const left = ((view.startAt - from) / span) * 100;
+              const width = ((view.endAt - view.startAt) / span) * 100;
+              return `<i class="strip-seg ${state}" style="left: ${left.toFixed(3)}%; width: ${width.toFixed(3)}%"></i>`;
+            })
+            .join("") + `<i class="strip-now" hidden></i>`;
+
+        setText(stripStart, formatTime(new Date(from)));
+        setText(stripEnd, formatTime(new Date(to)));
+        dayStrip.hidden = false;
+        positionStripNow(current);
+      }
+
+      function positionStripNow(current) {
+        const marker = stripTrack.querySelector(".strip-now");
+        if (!marker || !stripRange) return;
+
+        const ratio = (current - stripRange.from) / stripRange.span;
+        const visible = isToday(selectedDate) && ratio >= 0 && ratio <= 1;
+        marker.hidden = !visible;
+        if (visible) marker.style.left = `${(ratio * 100).toFixed(3)}%`;
       }
 
       function taskView(task, current) {
@@ -3347,10 +2662,11 @@
         const isLastTask = String(tasks.at(-1)?.id) === String(task.id);
         const isEditing = task.id === editingTaskId;
         const isActive = state === "active" && !task.done;
-        const classes = ["task", isActive ? "active" : "", task.done ? "done" : ""]
+        const isPast = state === "finished" && !task.done;
+        const classes = ["task", isActive ? "active" : "", task.done ? "done" : "", isPast ? "past" : ""]
           .filter(Boolean)
           .join(" ");
-        const countdownClass = task.done ? "done" : state === "finished" ? "finished" : "";
+        const countdownClass = task.done ? "done" : state;
 
         const main = isEditing
           ? `
@@ -3419,36 +2735,37 @@
               <span class="start">${formatTime(startAt)}</span>
               <span class="end">ends ${formatTime(endAt)}</span>
             </div>
-            <div class="task-main">${main}
-            </div>
-            <div class="task-side">
-              <div class="countdown ${countdownClass}">${remaining}</div>${actions}
+            <div class="task-card">
+              <div class="task-main">${main}
+              </div>
+              <div class="task-side">
+                <div class="countdown ${countdownClass}">${remaining}</div>${actions}
+              </div>
             </div>
           </li>
         `;
       }
 
-      function renderStatus(tasks, current) {
+      function renderStatus() {
         if (reorderInFlight) {
           statusText.textContent = "Saving schedule";
           return;
         }
 
-        const open = tasks.filter((task) => !task.done);
-        const active = open.find((task) => taskStatus(task, current) === "active");
-        const queued = open.find((task) => taskStatus(task, current) === "queued");
-
-        if (active) {
-          statusText.textContent = `Now: ${active.name}`;
-        } else if (queued) {
-          statusText.textContent = `Next: ${queued.name}`;
-        } else if (open.length > 0) {
-          statusText.textContent = `${open.length} not checked off`;
-        } else if (tasks.length > 0) {
-          statusText.textContent = "All complete";
-        } else {
-          statusText.textContent = "Ready";
+        if (tasks.length === 0) {
+          statusText.textContent = "";
+          return;
         }
+
+        const total = tasks.reduce((sum, task) => sum + Number(task.minutes), 0);
+        const done = tasks.filter((task) => task.done).length;
+        statusText.textContent = [
+          `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`,
+          formatMinutes(total),
+          done > 0 ? `${done} done` : "",
+        ]
+          .filter(Boolean)
+          .join(", ");
       }
 
       function renderCalendar() {
@@ -3491,7 +2808,8 @@
                   ({ key, task, startAt }) => `
                     <li class="history-item">
                       <strong>${escapeHtml(task.name)}</strong>
-                      <span>${dateLabelFormatter.format(dateFromKey(key))} · ${formatTime(startAt)} · ${task.minutes} min${task.done ? " · Done" : ""}</span>
+                      ${task.done ? `<span class="history-done">Done</span>` : ""}
+                      <span>${shortDateFormatter.format(dateFromKey(key))} at ${formatTime(startAt)}, ${task.minutes} min</span>
                     </li>
                   `,
                 )
@@ -3780,6 +3098,7 @@
         if (!button) return;
         selectedDate = button.dataset.date;
         calendarCursor = startOfMonth(dateFromKey(selectedDate));
+        tasks = [];
         await loadSelectedDateData();
       });
 
@@ -3797,6 +3116,7 @@
 
       todayButton.addEventListener("click", async () => {
         selectToday();
+        tasks = [];
         await loadSelectedDateData();
       });
 
