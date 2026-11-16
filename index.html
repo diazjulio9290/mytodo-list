@@ -900,6 +900,7 @@
 
       /* Timeline */
       .timeline {
+        position: relative;
         min-width: 0;
       }
 
@@ -1298,36 +1299,36 @@
         cursor: grabbing;
       }
 
-      /* Dragging: the moving card gets a dashed outline, the landing spot a marigold line */
+      /*
+        Dragging: the card follows the pointer with a dashed outline,
+        and a marigold line marks where it will land.
+      */
+      .task.dragging {
+        z-index: 5;
+      }
+
       .task.dragging .task-card {
         border-style: dashed;
         border-color: var(--ink);
         background: var(--surface);
-        box-shadow: 0 10px 24px rgba(19, 46, 42, 0.12);
+        box-shadow: 0 14px 30px rgba(19, 46, 42, 0.16);
+        will-change: transform;
       }
 
-      .task.drop-before .task-card,
-      .task.drop-after .task-card {
-        position: relative;
-      }
-
-      .task.drop-before .task-card::before,
-      .task.drop-after .task-card::after {
+      .drop-line {
         position: absolute;
-        right: 0;
-        left: 0;
+        z-index: 6;
         height: 3px;
+        margin-top: -1.5px;
         border-radius: 2px;
         background: var(--marigold);
-        content: "";
+        pointer-events: none;
       }
 
-      .task.drop-before .task-card::before {
-        top: -8px;
-      }
-
-      .task.drop-after .task-card::after {
-        bottom: -8px;
+      body.is-dragging {
+        cursor: grabbing;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       /* Edit inside the card */
@@ -1843,7 +1844,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
               <path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-linecap="round" stroke-width="3" />
             </svg>
-            <span>Drag a task to a new position. Following times update automatically.</span>
+            <span>Drag a task by its dots to move it. Following times update automatically.</span>
             <span class="reorder-key moving-key">Moving task</span>
             <span class="reorder-key landing-key">Landing spot</span>
           </p>
@@ -1854,6 +1855,7 @@
           </div>
 
           <ol class="task-list" id="taskList"></ol>
+          <div class="drop-line" id="dropLine" aria-hidden="true" hidden></div>
           <div class="day-note" id="dayNote" hidden>
             Enjoy your productive day.
           </div>
@@ -1956,6 +1958,7 @@
       const selectedDateLabel = document.querySelector("#selectedDateLabel");
       const reorderHint = document.querySelector("#reorderHint");
       const reorderAnnouncement = document.querySelector("#reorderAnnouncement");
+      const dropLine = document.querySelector("#dropLine");
 
       let session = null;
       let tasks = [];
@@ -2194,12 +2197,6 @@
           reorderInFlight = false;
           render();
         }
-      }
-
-      function clearDropIndicators() {
-        taskList
-          .querySelectorAll(".drop-before, .drop-after")
-          .forEach((task) => task.classList.remove("drop-before", "drop-after"));
       }
 
       async function addTask(name, minutes) {
@@ -2993,75 +2990,186 @@
         }
       });
 
-      let pointerDragState = null;
+      // Drag to reorder. The card follows the pointer, and it lands in a new spot
+      // once its leading edge passes the middle of a neighbouring card.
+      let drag = null;
+      const DRAG_EDGE = 80; // px from the top or bottom of the screen where the page starts to scroll
+      const DRAG_SCROLL_SPEED = 16; // px per frame at most
+
+      function measureTasks() {
+        return [...taskList.querySelectorAll(".task[data-task-id]")].map((element) => {
+          const row = element.getBoundingClientRect();
+          const card = element.querySelector(".task-card").getBoundingClientRect();
+          return {
+            id: element.dataset.taskId,
+            rowTop: row.top + window.scrollY,
+            top: card.top + window.scrollY,
+            bottom: card.bottom + window.scrollY,
+            left: card.left,
+            width: card.width,
+          };
+        });
+      }
+
+      function landingIndex(items, index, delta) {
+        const middle = (item) => (item.top + item.bottom) / 2;
+        const top = items[index].top + delta;
+        const bottom = items[index].bottom + delta;
+        let landing = index;
+
+        if (delta < 0) {
+          for (let i = index - 1; i >= 0 && top < middle(items[i]); i -= 1) landing = i;
+        } else {
+          for (let i = index + 1; i < items.length && bottom > middle(items[i]); i += 1) landing = i;
+        }
+
+        return landing;
+      }
+
+      function showDropLine() {
+        const { items, index, landing, origin } = drag;
+        if (landing === index) {
+          dropLine.hidden = true;
+          return;
+        }
+
+        // The line sits in the gap the card will move into.
+        const movingUp = landing < index;
+        const above = movingUp ? items[landing - 1] : items[landing];
+        const below = movingUp ? items[landing] : items[landing + 1];
+        const pageY = !above
+          ? below.rowTop - 6
+          : !below
+            ? above.bottom + 6
+            : (above.bottom + below.rowTop) / 2;
+
+        dropLine.style.top = `${pageY - origin.top}px`;
+        dropLine.style.left = `${items[index].left - origin.left}px`;
+        dropLine.style.width = `${items[index].width}px`;
+        dropLine.hidden = false;
+      }
+
+      function updateDrag() {
+        const { items, index } = drag;
+        const self = items[index];
+        const reach = 24;
+        const delta = Math.max(
+          items[0].top - self.top - reach,
+          Math.min(
+            items.at(-1).bottom - self.bottom + reach,
+            drag.clientY + window.scrollY - drag.startPageY,
+          ),
+        );
+
+        drag.card.style.transform = `translateY(${delta}px)`;
+        drag.landing = landingIndex(items, index, delta);
+        showDropLine();
+      }
+
+      // Runs every frame while dragging, so the page keeps scrolling near the
+      // top or bottom of the screen even when the pointer is held still.
+      function dragFrame() {
+        if (!drag) return;
+
+        const y = drag.clientY;
+        const fromTop = DRAG_EDGE - y;
+        const fromBottom = y - (window.innerHeight - DRAG_EDGE);
+        let speed = 0;
+        // Only scroll while part of the list is still off screen in that direction.
+        const listTop = drag.items[0].top - window.scrollY;
+        const listBottom = drag.items.at(-1).bottom - window.scrollY;
+        if (fromTop > 0 && y < drag.startClientY - 4 && listTop < DRAG_EDGE) {
+          speed = -Math.ceil(Math.min(1, fromTop / DRAG_EDGE) * DRAG_SCROLL_SPEED);
+        } else if (
+          fromBottom > 0 &&
+          y > drag.startClientY + 4 &&
+          listBottom > window.innerHeight - DRAG_EDGE
+        ) {
+          speed = Math.ceil(Math.min(1, fromBottom / DRAG_EDGE) * DRAG_SCROLL_SPEED);
+        }
+
+        if (speed !== 0) {
+          const before = window.scrollY;
+          window.scrollBy(0, speed);
+          if (window.scrollY !== before) updateDrag();
+        }
+
+        drag.frame = requestAnimationFrame(dragFrame);
+      }
+
+      async function finishDrag(commit) {
+        if (!drag) return;
+
+        const { items, index, landing, frame } = drag;
+        const movedTaskId = draggedTaskId;
+        cancelAnimationFrame(frame);
+        drag = null;
+        draggedTaskId = null;
+        dropLine.hidden = true;
+        document.body.classList.remove("is-dragging");
+        render();
+
+        if (commit && landing !== index) {
+          await moveTask(movedTaskId, items[landing].id, landing < index ? "before" : "after");
+        }
+      }
 
       taskList.addEventListener("pointerdown", (event) => {
         const handle = event.target.closest("[data-drag-handle]");
         const task = event.target.closest(".task[data-task-id]");
-        if (!handle || !task || reorderInFlight || editingTaskId || event.button !== 0) return;
+        if (!handle || !task || drag || reorderInFlight || editingTaskId || event.button !== 0) return;
 
         event.preventDefault();
+        const items = measureTasks();
+        const index = items.findIndex((item) => item.id === task.dataset.taskId);
+        if (index < 0) return;
+
+        const timeline = dropLine.parentElement.getBoundingClientRect();
         draggedTaskId = task.dataset.taskId;
-        pointerDragState = {
+        drag = {
           pointerId: event.pointerId,
-          targetTaskId: null,
-          position: null,
+          card: task.querySelector(".task-card"),
+          items,
+          index,
+          landing: index,
+          origin: { top: timeline.top + window.scrollY, left: timeline.left },
+          startPageY: event.clientY + window.scrollY,
+          startClientY: event.clientY,
+          clientY: event.clientY,
+          frame: 0,
         };
         handle.setPointerCapture?.(event.pointerId);
         task.classList.add("dragging");
+        document.body.classList.add("is-dragging");
+        drag.frame = requestAnimationFrame(dragFrame);
       });
 
       taskList.addEventListener("pointermove", (event) => {
-        if (!pointerDragState || event.pointerId !== pointerDragState.pointerId) return;
+        if (!drag || event.pointerId !== drag.pointerId) return;
 
         event.preventDefault();
-        const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
-        const targetTask = hoveredElement?.closest(".task[data-task-id]");
-        if (
-          !draggedTaskId ||
-          !targetTask ||
-          targetTask.dataset.taskId === draggedTaskId
-        ) {
-          pointerDragState.targetTaskId = null;
-          pointerDragState.position = null;
-          clearDropIndicators();
-          return;
-        }
-
-        clearDropIndicators();
-        const bounds = targetTask.getBoundingClientRect();
-        const position = event.clientY < bounds.top + bounds.height / 2 ? "before" : "after";
-        pointerDragState.targetTaskId = targetTask.dataset.taskId;
-        pointerDragState.position = position;
-        targetTask.classList.add(`drop-${position}`);
-
-        if (event.clientY < 56) {
-          window.scrollBy({ top: -18, behavior: "auto" });
-        } else if (event.clientY > window.innerHeight - 56) {
-          window.scrollBy({ top: 18, behavior: "auto" });
-        }
+        drag.clientY = event.clientY;
+        updateDrag();
       });
 
-      taskList.addEventListener("pointerup", async (event) => {
-        if (!pointerDragState || event.pointerId !== pointerDragState.pointerId) return;
+      taskList.addEventListener("pointerup", (event) => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+
         event.preventDefault();
-        const movedTaskId = draggedTaskId;
-        const { targetTaskId, position } = pointerDragState;
-        draggedTaskId = null;
-        pointerDragState = null;
-        clearDropIndicators();
-        render();
-
-        if (targetTaskId && position) {
-          await moveTask(movedTaskId, targetTaskId, position);
-        }
+        finishDrag(true);
       });
 
-      taskList.addEventListener("pointercancel", () => {
-        draggedTaskId = null;
-        pointerDragState = null;
-        clearDropIndicators();
-        render();
+      taskList.addEventListener("pointercancel", (event) => {
+        if (drag && event.pointerId === drag.pointerId) finishDrag(false);
+      });
+
+      // Safety net: if the browser takes the pointer away without a release, put the card back.
+      document.addEventListener("lostpointercapture", (event) => {
+        if (drag && event.pointerId === drag.pointerId) finishDrag(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && drag) finishDrag(false);
       });
 
       quickButtons.forEach((button) => {
