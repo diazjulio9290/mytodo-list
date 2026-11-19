@@ -31,6 +31,19 @@ SESSION_SECRET=replace-this-with-a-long-random-string
 
 GitHub Pages can only host the old static version. This Neon version needs Vercel or another Node-capable host because the database password must stay on the server.
 
+## How a day works
+
+**Build the list, then press Start.** A task you add as "Next in line" joins the list but does not count down. Press **Start now** in the top band when you are ready, or **Start at a set time** to have the list begin later. New tasks also wait for Start whenever nothing is running or coming up, for example when you plan an afternoon block after the morning one ended.
+
+**Next in line or at a set time.** Each task has a "Starts" choice:
+
+- *Next in line* starts when the task before it ends.
+- *At a set time* starts at the time you pick, and the tasks after it follow on. It is slotted into the list in time order. A task that would still be running at that time is moved to after it, unless that task has already started.
+
+A set-time task never starts before its time. If the tasks before it run long, it starts late and the card says so. You can change either choice from the edit pencil on a task.
+
+Two columns on the `tasks` table hold this: `waiting` (on the list, not started yet) and `scheduled_at` (the set time, or null for next in line). Both are added automatically on startup.
+
 ## Accounts
 
 New accounts are turned off. The sign in page has no "Create account" button and the server refuses sign ups.

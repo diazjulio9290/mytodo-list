@@ -610,6 +610,54 @@
         background: rgba(255, 255, 255, 0.1);
       }
 
+      /* Start the waiting tasks: the one marigold button, because it is about "now" */
+      .start-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .start-actions .band-button {
+        margin-top: 0;
+      }
+
+      .band-button.is-primary {
+        border-color: var(--marigold);
+        background: var(--marigold);
+        color: var(--evergreen-deep);
+      }
+
+      .band-button.is-primary:hover {
+        border-color: #f6b958;
+        background: #f6b958;
+      }
+
+      .start-at {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .start-at input {
+        width: auto;
+        min-height: 40px;
+        border-color: transparent;
+      }
+
+      .start-message {
+        flex-basis: 100%;
+        color: var(--marigold);
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      .start-message:empty {
+        display: none;
+      }
+
       /* The plan for the day as one strip: each block is a task, the marker is now */
       .day-strip {
         margin-top: 22px;
@@ -728,6 +776,80 @@
       .form-help {
         color: var(--ink-faint);
         font-size: 0.8125rem;
+      }
+
+      .add-panel .form-message:empty {
+        display: none;
+      }
+
+      /* When a task starts: next in line, or at a set time */
+      .when {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .when legend {
+        margin-bottom: 6px;
+        padding: 0;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .when-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3px;
+        padding: 3px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-control);
+      }
+
+      .when-option {
+        position: relative;
+        display: block;
+      }
+
+      .when-option input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .when-option span {
+        display: grid;
+        min-height: 36px;
+        place-items: center;
+        padding: 0 8px;
+        border-radius: 7px;
+        color: var(--ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-align: center;
+        transition:
+          background 120ms ease,
+          color 120ms ease;
+      }
+
+      .when-option input:checked + span {
+        background: var(--evergreen-wash);
+        color: var(--evergreen-dark);
+      }
+
+      .when-option input:focus-visible + span {
+        outline: 2px solid var(--evergreen);
+        outline-offset: 1px;
       }
 
       .add-panel .secondary {
@@ -1192,6 +1314,25 @@
         font-weight: 600;
       }
 
+      .tag.set-tag {
+        color: var(--evergreen-dark);
+        font-weight: 600;
+      }
+
+      .tag.late-tag {
+        color: var(--clay);
+        font-weight: 600;
+      }
+
+      /* Waiting: on the list, not on the clock yet */
+      .task.waiting::after {
+        border-style: dashed;
+      }
+
+      .task.waiting .start {
+        color: var(--ink-soft);
+      }
+
       .bar {
         display: none;
         height: 4px;
@@ -1357,6 +1498,29 @@
         font-size: 0.8125rem;
       }
 
+      .task-edit select {
+        min-height: 40px;
+        padding: 0 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.875rem;
+      }
+
+      .task-edit-row input[type="time"] {
+        width: 128px;
+      }
+
+      .task-edit-buttons {
+        justify-content: flex-end;
+      }
+
+      .task-edit .form-message:empty {
+        display: none;
+      }
+
       .task-edit-row button {
         min-height: 40px;
         font-size: 0.875rem;
@@ -1489,6 +1653,8 @@
         }
 
         .add-panel .quick,
+        .add-panel .when,
+        .add-panel .form-message,
         .add-panel .form-help {
           grid-column: 1 / -1;
         }
@@ -1753,6 +1919,16 @@
             <span class="now-countdown" id="nowCountdown"></span><span id="nowDetail"></span>
           </p>
           <button class="band-button" id="todayButton" type="button" hidden>Back to today</button>
+          <div class="start-actions" id="startActions" hidden>
+            <button class="band-button is-primary" id="startNowButton" type="button">Start now</button>
+            <button class="band-button" id="startAtButton" type="button">Start at a set time</button>
+            <form class="start-at" id="startAtForm" hidden>
+              <input id="startAtTime" type="time" aria-label="Start time" required />
+              <button class="band-button is-primary" type="submit">Set start time</button>
+              <button class="band-button" id="startAtCancel" type="button">Cancel</button>
+            </form>
+            <p class="start-message" id="startMessage" aria-live="polite"></p>
+          </div>
           <div class="day-strip" id="dayStrip" aria-hidden="true" hidden>
             <div class="strip-track" id="stripTrack"></div>
             <div class="strip-ends">
@@ -1800,7 +1976,26 @@
                 <button type="button" data-minutes="45">45 min</button>
               </div>
 
-              <p class="form-help">Each task starts when the one before it ends.</p>
+              <fieldset class="when">
+                <legend>Starts</legend>
+                <div class="when-options">
+                  <label class="when-option">
+                    <input type="radio" name="taskWhen" value="next" checked />
+                    <span>Next in line</span>
+                  </label>
+                  <label class="when-option">
+                    <input type="radio" name="taskWhen" value="at" />
+                    <span>At a set time</span>
+                  </label>
+                </div>
+                <label id="taskTimeField" hidden>
+                  Start time
+                  <input id="taskTime" type="time" />
+                </label>
+              </fieldset>
+
+              <p class="form-message" id="addMessage" aria-live="polite"></p>
+              <p class="form-help" id="formHelp">Build your list first. Nothing counts down until you press Start.</p>
 
               <button class="secondary" type="button" id="finishDay">
                 Wrap up the day
@@ -1886,11 +2081,15 @@
     <script type="module">
       import {
         gapStarts,
+        gapStartsAfterInsert,
         gapStartsAfterRemoval,
         nextTaskStart,
+        planAnchor,
         reorderAnchor,
         reorderTasks,
         rescheduleTasks,
+        scheduledInsertIndex,
+        startPlan,
       } from "/schedule.js";
 
       async function apiRequest(path, options = {}) {
@@ -1930,6 +2129,17 @@
       const taskForm = document.querySelector("#taskForm");
       const taskName = document.querySelector("#taskName");
       const taskDuration = document.querySelector("#taskDuration");
+      const taskTimeField = document.querySelector("#taskTimeField");
+      const taskTime = document.querySelector("#taskTime");
+      const addMessage = document.querySelector("#addMessage");
+      const formHelp = document.querySelector("#formHelp");
+      const startActions = document.querySelector("#startActions");
+      const startNowButton = document.querySelector("#startNowButton");
+      const startAtButton = document.querySelector("#startAtButton");
+      const startAtForm = document.querySelector("#startAtForm");
+      const startAtTime = document.querySelector("#startAtTime");
+      const startAtCancel = document.querySelector("#startAtCancel");
+      const startMessage = document.querySelector("#startMessage");
       const taskList = document.querySelector("#taskList");
       const clock = document.querySelector("#clock");
       const nowDate = document.querySelector("#nowDate");
@@ -1974,11 +2184,22 @@
       let loadError = false;
       let clockText = "";
       let stripRange = null;
+      let startAtOpen = false;
+      let startInFlight = false;
 
       const pacificFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
         minute: "2-digit",
         timeZone: "America/Los_Angeles",
+      });
+      const pacificPartsFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        hourCycle: "h23",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       });
       const dateLabelFormatter = new Intl.DateTimeFormat("en-US", {
         weekday: "long",
@@ -2070,6 +2291,44 @@
         return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
       }
 
+      function pacificParts(date) {
+        return Object.fromEntries(
+          pacificPartsFormatter.formatToParts(date).map((part) => [part.type, part.value]),
+        );
+      }
+
+      // The moment a clock time such as "14:30" happens on a calendar day, in Pacific time.
+      function pacificDateTime(key, time) {
+        const [year, month, day] = key.split("-").map(Number);
+        const [hours, minutes] = time.split(":").map(Number);
+        const wanted = Date.UTC(year, month - 1, day, hours, minutes);
+        let guess = wanted;
+
+        for (let pass = 0; pass < 2; pass += 1) {
+          const shown = pacificParts(new Date(guess));
+          guess +=
+            wanted -
+            Date.UTC(+shown.year, +shown.month - 1, +shown.day, +shown.hour % 24, +shown.minute);
+        }
+
+        return new Date(guess);
+      }
+
+      // A moment as "14:30", the format a time field uses.
+      function timeFieldValue(date) {
+        const parts = pacificParts(date);
+        return `${String(+parts.hour % 24).padStart(2, "0")}:${parts.minute}`;
+      }
+
+      // A sensible time to offer: the next quarter hour today, 9am on other days.
+      function suggestedTime() {
+        if (!isToday(selectedDate)) return "09:00";
+
+        const quarter = 15 * 60 * 1000;
+        const soon = now().getTime() + 5 * 60 * 1000;
+        return timeFieldValue(new Date(Math.ceil(soon / quarter) * quarter));
+      }
+
       function taskStatus(task, current) {
         const startAt = new Date(task.startAt);
         const endAt = new Date(task.endAt);
@@ -2081,9 +2340,7 @@
 
       function firstStartTime() {
         if (isToday(selectedDate)) return now();
-        const date = dateFromKey(selectedDate);
-        date.setHours(9, 0, 0, 0);
-        return date;
+        return pacificDateTime(selectedDate, "09:00");
       }
 
       function normalizeTask(row) {
@@ -2095,7 +2352,41 @@
           endAt: row.end_at,
           doneAdding: row.done_adding,
           done: Boolean(row.is_done),
+          waiting: Boolean(row.waiting),
+          scheduledAt: row.scheduled_at || null,
         };
+      }
+
+      function setScheduled(task, value) {
+        task.scheduledAt = value;
+        task.scheduled_at = value;
+      }
+
+      // Should a new "next in line" task wait for Start?
+      // Yes while a list is being built, and whenever nothing is running or coming up.
+      function flowWaits(list = tasks) {
+        if (list.some((task) => task.waiting)) return true;
+        if (!isToday(selectedDate)) return list.length === 0;
+
+        const current = now();
+        return !list.some((task) => new Date(task.endAt) > current);
+      }
+
+      // Where a set-time task belongs in the list. While tasks are waiting today,
+      // line the day up as if it started now, so the task lands in time order among them.
+      function placementFor(list, scheduledAt) {
+        const current = now();
+
+        if (isToday(selectedDate) && list.some((task) => task.waiting)) {
+          const lined = startPlan(list, current);
+          const byId = new Map(list.map((task) => [String(task.id), task]));
+          return {
+            order: lined.map((task) => byId.get(String(task.id))),
+            index: scheduledInsertIndex(lined, scheduledAt, current),
+          };
+        }
+
+        return { order: [...list], index: scheduledInsertIndex(list, scheduledAt, current) };
       }
 
       function selectedDoneAdding() {
@@ -2132,8 +2423,7 @@
       }
 
       async function persistSchedule(gaps = gapStarts(tasks)) {
-        const originalFirstStart = tasks[0] ? new Date(tasks[0].startAt) : null;
-        rescheduleDay(tasks, originalFirstStart, gaps);
+        rescheduleDay(tasks, planAnchor(tasks), gaps);
 
         const updates = tasks.map((task) =>
           apiRequest(`/api/tasks/${task.id}`, {
@@ -2145,6 +2435,8 @@
               end_at: task.end_at,
               sort_order: task.sort_order,
               done_adding: task.doneAdding,
+              scheduled_at: task.scheduledAt ?? null,
+              waiting: Boolean(task.waiting),
             }),
           }),
         );
@@ -2186,9 +2478,10 @@
 
           tasks = (data.tasks || []).map(normalizeTask);
           const movedTask = tasks.find((task) => String(task.id) === String(taskId));
-          reorderAnnouncement.textContent = movedTask
-            ? `${movedTask.name} moved to ${formatTime(new Date(movedTask.startAt))}. Following task times were updated.`
-            : "Task order and times updated.";
+          reorderAnnouncement.textContent =
+            movedTask && !movedTask.waiting
+              ? `${movedTask.name} moved to ${formatTime(new Date(movedTask.startAt))}. Following task times were updated.`
+              : "Task order updated.";
           await loadSelectedDateData();
         } catch (error) {
           tasks = originalTasks;
@@ -2199,35 +2492,76 @@
         }
       }
 
-      async function addTask(name, minutes) {
-        const durationMs = minutes * 60 * 1000;
-        const startAt = nextTaskStart(
-          tasks,
-          firstStartTime(),
-          isToday(selectedDate) ? now() : null,
-        );
-        const endAt = new Date(startAt.getTime() + durationMs);
+      // scheduledAt is a Date for a set-time task, or null for "next in line".
+      async function addTask(name, minutes, scheduledAt = null) {
+        const waiting = !scheduledAt && flowWaits();
+        const placement = scheduledAt ? placementFor(tasks, scheduledAt) : null;
+        const startAt =
+          scheduledAt ||
+          nextTaskStart(
+            tasks,
+            firstStartTime(),
+            !waiting && isToday(selectedDate) ? now() : null,
+          );
+        const endAt = new Date(startAt.getTime() + minutes * 60 * 1000);
 
         try {
           const data = await apiRequest("/api/tasks", {
             method: "POST",
             body: JSON.stringify({
-            user_id: session.user.id,
-            task_name: name,
-            duration_minutes: minutes,
-            task_date: selectedDate,
-            start_at: startAt.toISOString(),
-            end_at: endAt.toISOString(),
-            sort_order: tasks.length,
-            done_adding: false,
+              task_name: name,
+              duration_minutes: minutes,
+              task_date: selectedDate,
+              start_at: startAt.toISOString(),
+              end_at: endAt.toISOString(),
+              sort_order: placement ? placement.index : tasks.length,
+              done_adding: false,
+              scheduled_at: scheduledAt ? scheduledAt.toISOString() : null,
+              waiting,
             }),
           });
+          const added = normalizeTask(data.task);
 
-          tasks.push(normalizeTask(data.task));
+          if (placement) {
+            // Slot it in by time, then let the tasks after it follow on.
+            const gaps = gapStartsAfterInsert(gapStarts(placement.order), placement.index);
+            tasks = placement.order;
+            tasks.splice(placement.index, 0, added);
+            await persistSchedule(gaps);
+          } else {
+            tasks.push(added);
+          }
+
+          await loadSelectedDateData();
+          return true;
+        } catch (error) {
+          alert(error.message);
+          return false;
+        }
+      }
+
+      // Put the waiting tasks on the clock, beginning at startAt.
+      async function startDay(startAt) {
+        if (startInFlight) return;
+        startInFlight = true;
+
+        try {
+          const data = await apiRequest("/api/days/start", {
+            method: "POST",
+            body: JSON.stringify({
+              task_date: selectedDate,
+              start_at: startAt.toISOString(),
+            }),
+          });
+          tasks = (data.tasks || []).map(normalizeTask);
+          startAtOpen = false;
+          startAtTime.value = "";
+          render();
           await loadSelectedDateData();
         } catch (error) {
           alert(error.message);
-          return;
+        } finally {
+          startInFlight = false;
         }
       }
 
@@ -2245,7 +2579,23 @@
           return;
         }
 
+        const removed = tasks[removedIndex];
         tasks = tasks.filter((task) => task.id !== taskId);
+
+        // If the first task of the plan is removed before it began,
+        // the next task takes over its start time.
+        const first = tasks.find((task) => !task.waiting);
+        if (
+          removed &&
+          !removed.waiting &&
+          first &&
+          new Date(removed.startAt) > now() &&
+          new Date(removed.startAt) < new Date(first.startAt)
+        ) {
+          first.startAt = removed.startAt;
+          first.start_at = removed.startAt;
+        }
+
         try {
           await persistSchedule(gaps);
           await loadSelectedDateData();
@@ -2314,12 +2664,27 @@
         const task = tasks.find((item) => item.id === editingTaskId);
         if (!task) return closeEditor();
 
+        const message = form.querySelector("[data-edit-message]");
         const cleanName = form.elements.editName.value.trim();
         const minutes = Math.round(Number(form.elements.editMinutes.value));
         if (!cleanName || !Number.isFinite(minutes) || minutes < 1) return;
 
-        if (cleanName === task.name && minutes === task.minutes) {
+        const wantsSetTime = form.elements.editWhen.value === "at";
+        if (wantsSetTime && !form.elements.editTime.value) return;
+        const scheduled = wantsSetTime
+          ? pacificDateTime(selectedDate, form.elements.editTime.value)
+          : null;
+        const timeBefore = task.scheduledAt ? new Date(task.scheduledAt).getTime() : null;
+        const timeAfter = scheduled ? scheduled.getTime() : null;
+        const timeChanged = timeBefore !== timeAfter;
+
+        if (cleanName === task.name && minutes === task.minutes && !timeChanged) {
           return closeEditor();
+        }
+
+        if (timeChanged && scheduled && isToday(selectedDate) && scheduled <= now()) {
+          message.textContent = "That time has already passed today. Pick a later time.";
+          return;
         }
 
         task.name = cleanName;
@@ -2328,8 +2693,37 @@
         task.duration_minutes = minutes;
         editingTaskId = null;
 
+        let gaps = gapStarts(tasks);
+        if (timeChanged && scheduled) {
+          // Take the task out, then put it back where its new time falls.
+          const { order, index } = placementFor(
+            tasks.filter((item) => item !== task),
+            scheduled,
+          );
+          const startAt = scheduled.toISOString();
+          const endAt = new Date(scheduled.getTime() + minutes * 60 * 1000).toISOString();
+          setScheduled(task, startAt);
+          Object.assign(task, {
+            waiting: false,
+            startAt,
+            start_at: startAt,
+            endAt,
+            end_at: endAt,
+          });
+          gaps = gapStartsAfterInsert(gapStarts(order), index);
+          tasks = order;
+          tasks.splice(index, 0, task);
+        } else if (timeChanged) {
+          // Back to next in line: it follows the task before it again,
+          // or waits for Start if nothing else is running.
+          gaps[tasks.indexOf(task)] = null;
+          setScheduled(task, null);
+          task.waiting =
+            new Date(task.startAt) > now() && flowWaits(tasks.filter((item) => item !== task));
+        }
+
         try {
-          await persistSchedule();
+          await persistSchedule(gaps);
         } catch (error) {
           alert(error.message);
         }
@@ -2376,6 +2770,9 @@
           taskId: form.dataset.taskId,
           name: form.elements.editName.value,
           minutes: form.elements.editMinutes.value,
+          when: form.elements.editWhen.value,
+          time: form.elements.editTime.value,
+          message: form.querySelector("[data-edit-message]").textContent,
           focusName: focused?.name || null,
           selection:
             focused === form.elements.editName
@@ -2390,6 +2787,10 @@
 
         form.elements.editName.value = draft.name;
         form.elements.editMinutes.value = draft.minutes;
+        form.elements.editWhen.value = draft.when;
+        form.elements.editTime.value = draft.time;
+        form.elements.editTime.hidden = draft.when !== "at";
+        form.querySelector("[data-edit-message]").textContent = draft.message;
         const field = draft.focusName ? form.elements[draft.focusName] : null;
         field?.focus();
         if (draft.selection) {
@@ -2401,7 +2802,9 @@
       function structureKey(current) {
         return [
           dateKey(current),
-          ...tasks.map((task) => `${task.id}:${taskStatus(task, current)}`),
+          ...tasks.map(
+            (task) => `${task.id}:${task.waiting ? "waiting" : taskStatus(task, current)}`,
+          ),
         ].join("|");
       }
 
@@ -2481,6 +2884,7 @@
         }
         lastStructure = structureKey(current);
         renderStatus();
+        renderFormHelp();
         renderNow(current);
         renderDayStrip(current);
         renderCalendar();
@@ -2506,20 +2910,28 @@
           return { label: "Today", title: "Loading your day", detail: "" };
         }
 
+        const waitingList = tasks.filter((task) => task.waiting);
+        const planned = (list) =>
+          `${list.length} ${list.length === 1 ? "task" : "tasks"}`;
+        const totalMinutes = (list) =>
+          formatMinutes(list.reduce((sum, task) => sum + Number(task.minutes), 0));
+
         if (!isToday(selectedDate)) {
           return {
             label: shortDateFormatter.format(dateFromKey(selectedDate)),
             title:
               tasks.length === 0
                 ? "Nothing planned for this day."
-                : `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"} planned, ${formatMinutes(
-                    tasks.reduce((sum, task) => sum + Number(task.minutes), 0),
-                  )}`,
-            detail: "The clock still shows the time right now.",
+                : `${planned(tasks)} planned, ${totalMinutes(tasks)}`,
+            detail:
+              waitingList.length > 0
+                ? "Not started. Set a start time here, or press Start on the day."
+                : "The clock still shows the time right now.",
           };
         }
 
-        const open = tasks.filter((task) => !task.done);
+        const onClock = tasks.filter((task) => !task.waiting);
+        const open = onClock.filter((task) => !task.done);
         const active = open.find((task) => taskStatus(task, current) === "active");
         const queued = open.find((task) => taskStatus(task, current) === "queued");
 
@@ -2531,6 +2943,21 @@
             title: active.name,
             countdown: formatDuration((endAt - current) / 1000),
             detail: `left, ends at ${formatTime(endAt)}`,
+          };
+        }
+
+        if (waitingList.length > 0) {
+          // What the clock would say if Start were pressed this second.
+          const waitingIds = new Set(waitingList.map((task) => String(task.id)));
+          const finish = Math.max(
+            ...startPlan(tasks, current)
+              .filter((task) => waitingIds.has(String(task.id)))
+              .map((task) => new Date(task.endAt).getTime()),
+          );
+          return {
+            label: "Not started",
+            title: `${planned(waitingList)} ready, ${totalMinutes(waitingList)}`,
+            detail: `Start now and you finish at ${formatTime(new Date(finish))}.`,
           };
         }
 
@@ -2563,8 +2990,50 @@
         return {
           label: "Today",
           title: "Nothing planned yet.",
-          detail: "Add a task to start your timeline.",
+          detail: "Add your tasks, then press Start when you are ready.",
         };
+      }
+
+      // The Start buttons show whenever tasks are waiting.
+      function renderStartActions(current) {
+        const hasWaiting = !loadError && tasks.some((task) => task.waiting);
+        startActions.hidden = !hasWaiting;
+        if (!hasWaiting) {
+          startAtOpen = false;
+          return;
+        }
+
+        const today = isToday(selectedDate);
+        const running =
+          today &&
+          tasks.some((task) => !task.waiting && taskStatus(task, current) === "active");
+        startNowButton.hidden = !today || startAtOpen;
+        setText(startNowButton, running ? "Start after this task" : "Start now");
+        startAtButton.hidden = startAtOpen;
+        setText(startAtButton, today ? "Start at a set time" : "Set a start time");
+        startAtForm.hidden = !startAtOpen;
+      }
+
+      function renderFormHelp() {
+        const atSetTime = taskForm.elements.taskWhen.value === "at";
+        setText(
+          formHelp,
+          atSetTime
+            ? "It starts at that time. Tasks after it follow on."
+            : flowWaits()
+              ? "Build your list first. Nothing counts down until you press Start."
+              : "It starts when the task before it ends.",
+        );
+      }
+
+      // Show or hide the time field to match the "Starts" choice.
+      function syncWhen() {
+        const atSetTime = taskForm.elements.taskWhen.value === "at";
+        taskTimeField.hidden = !atSetTime;
+        taskTime.required = atSetTime;
+        if (atSetTime && !taskTime.value) taskTime.value = suggestedTime();
+        if (!atSetTime) addMessage.textContent = "";
+        renderFormHelp();
       }
 
       function renderNow(current) {
@@ -2574,23 +3043,25 @@
         setText(nowTitle, view.title);
         setText(nowCountdown, view.countdown || "");
         setText(nowDetail, view.detail);
+        renderStartActions(current);
       }
 
       // The whole plan as one strip: one block per task, sized by its length.
       function renderDayStrip(current) {
-        if (tasks.length === 0 || loadError) {
+        const onClock = tasks.filter((task) => !task.waiting);
+        if (onClock.length === 0 || loadError) {
           dayStrip.hidden = true;
           stripRange = null;
           return;
         }
 
-        const from = Math.min(...tasks.map((task) => new Date(task.startAt).getTime()));
-        const to = Math.max(...tasks.map((task) => new Date(task.endAt).getTime()));
+        const from = Math.min(...onClock.map((task) => new Date(task.startAt).getTime()));
+        const to = Math.max(...onClock.map((task) => new Date(task.endAt).getTime()));
         const span = Math.max(to - from, 60 * 1000);
         stripRange = { from, span };
 
         stripTrack.innerHTML =
-          tasks
+          onClock
             .map((task) => {
               const view = taskView(task, current);
               const state = task.done
@@ -2625,6 +3096,23 @@
       function taskView(task, current) {
         const startAt = new Date(task.startAt);
         const endAt = new Date(task.endAt);
+
+        // Waiting tasks are not on the clock, so they have no times to show.
+        if (task.waiting) {
+          return {
+            startAt,
+            endAt,
+            state: "waiting",
+            progress: 0,
+            label: "Not started",
+            remaining: "",
+            scheduledAt: null,
+            late: false,
+          };
+        }
+
+        const scheduledAt = task.scheduledAt ? new Date(task.scheduledAt) : null;
+        const late = Boolean(scheduledAt) && startAt - scheduledAt >= 60 * 1000;
         const state = taskStatus(task, current);
         const total = endAt - startAt;
         const elapsed = current - startAt;
@@ -2649,20 +3137,39 @@
               ? "Move to reschedule"
               : formatDuration((endAt - current) / 1000);
 
-        return { startAt, endAt, state, progress, label, remaining };
+        return { startAt, endAt, state, progress, label, remaining, scheduledAt, late };
       }
 
       function renderTask(task, current) {
-        const { startAt, endAt, state, progress, label, remaining } = taskView(task, current);
+        const { startAt, endAt, state, progress, label, remaining, scheduledAt, late } =
+          taskView(task, current);
         const taskId = escapeHtml(String(task.id));
         const taskName = escapeHtml(task.name);
         const isLastTask = String(tasks.at(-1)?.id) === String(task.id);
         const isEditing = task.id === editingTaskId;
         const isActive = state === "active" && !task.done;
         const isPast = state === "finished" && !task.done;
-        const classes = ["task", isActive ? "active" : "", task.done ? "done" : "", isPast ? "past" : ""]
+        const classes = [
+          "task",
+          isActive ? "active" : "",
+          task.done ? "done" : "",
+          isPast ? "past" : "",
+          task.waiting ? "waiting" : "",
+        ]
           .filter(Boolean)
           .join(" ");
+        // Waiting tasks show their place in line instead of a time.
+        const timeBlock = task.waiting
+          ? `<span class="start">${tasks.filter((item) => item.waiting).indexOf(task) + 1}</span>
+              <span class="end">${task.minutes} min</span>`
+          : `<span class="start">${formatTime(startAt)}</span>
+              <span class="end">ends ${formatTime(endAt)}</span>`;
+        const setTimeTag = !scheduledAt
+          ? ""
+          : late
+            ? `<span class="tag late-tag">Set for ${formatTime(scheduledAt)}, starts late</span>`
+            : `<span class="tag set-tag">Set time</span>`;
+        const editTime = task.scheduledAt ? timeFieldValue(new Date(task.scheduledAt)) : "";
         const countdownClass = task.done ? "done" : state;
 
         const main = isEditing
@@ -2672,6 +3179,16 @@
                 <div class="task-edit-row">
                   <input name="editMinutes" type="number" min="1" step="1" value="${task.minutes}" aria-label="Duration in minutes" required />
                   <span class="task-edit-unit">min</span>
+                </div>
+                <div class="task-edit-row">
+                  <select name="editWhen" aria-label="When it starts">
+                    <option value="next" ${editTime ? "" : "selected"}>Next in line</option>
+                    <option value="at" ${editTime ? "selected" : ""}>At a set time</option>
+                  </select>
+                  <input name="editTime" type="time" value="${editTime}" aria-label="Start time" ${editTime ? "" : "hidden"} />
+                </div>
+                <p class="form-message" data-edit-message aria-live="polite"></p>
+                <div class="task-edit-row task-edit-buttons">
                   <button class="ghost" type="button" data-action="cancel-edit" data-task-id="${taskId}">Cancel</button>
                   <button class="primary" type="submit">Save</button>
                 </div>
@@ -2688,6 +3205,7 @@
               <div class="meta">
                 <span class="tag ${isActive ? "active-tag" : ""} ${task.done ? "done-tag" : ""}">${label}</span>
                 <span class="tag">${task.minutes} min</span>
+                ${setTimeTag}
               </div>
               <div class="bar" aria-label="${label} progress">
                 <div class="fill" style="width: ${progress}%"></div>
@@ -2729,8 +3247,7 @@
         return `
           <li class="${classes}" data-task-id="${taskId}">
             <div class="time-block">
-              <span class="start">${formatTime(startAt)}</span>
-              <span class="end">ends ${formatTime(endAt)}</span>
+              ${timeBlock}
             </div>
             <div class="task-card">
               <div class="task-main">${main}
@@ -2806,7 +3323,7 @@
                     <li class="history-item">
                       <strong>${escapeHtml(task.name)}</strong>
                       ${task.done ? `<span class="history-done">Done</span>` : ""}
-                      <span>${shortDateFormatter.format(dateFromKey(key))} at ${formatTime(startAt)}, ${task.minutes} min</span>
+                      <span>${shortDateFormatter.format(dateFromKey(key))}, ${task.waiting ? "not started" : `at ${formatTime(startAt)}`}, ${task.minutes} min</span>
                     </li>
                   `,
                 )
@@ -2941,9 +3458,55 @@
 
         if (!name || !Number.isFinite(minutes) || minutes < 1) return;
 
-        await addTask(name, Math.round(minutes));
+        let scheduledAt = null;
+        addMessage.textContent = "";
+        if (taskForm.elements.taskWhen.value === "at") {
+          if (!taskTime.value) return;
+          scheduledAt = pacificDateTime(selectedDate, taskTime.value);
+          if (isToday(selectedDate) && scheduledAt <= now()) {
+            addMessage.textContent = "That time has already passed today. Pick a later time.";
+            return;
+          }
+        }
+
+        if (!(await addTask(name, Math.round(minutes), scheduledAt))) return;
         taskForm.reset();
+        syncWhen();
         taskName.focus();
+      });
+
+      taskForm.addEventListener("change", (event) => {
+        if (event.target.name === "taskWhen") syncWhen();
+      });
+
+      startNowButton.addEventListener("click", () => startDay(now()));
+
+      startAtButton.addEventListener("click", () => {
+        startAtOpen = true;
+        startMessage.textContent = "";
+        if (!startAtTime.value) startAtTime.value = suggestedTime();
+        render();
+        startAtTime.focus();
+      });
+
+      startAtCancel.addEventListener("click", () => {
+        startAtOpen = false;
+        startMessage.textContent = "";
+        render();
+      });
+
+      startAtForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!startAtTime.value) return;
+
+        const startAt = pacificDateTime(selectedDate, startAtTime.value);
+        if (isToday(selectedDate) && startAt <= now()) {
+          startMessage.textContent = "That time has already passed today. Pick a later time.";
+          return;
+        }
+
+        startMessage.textContent = "";
+        await startDay(startAt);
       });
 
       taskList.addEventListener("click", async (event) => {
@@ -2988,6 +3551,15 @@
         if (event.key === "Escape" && event.target.closest(".task-edit")) {
           closeEditor();
         }
+      });
+
+      // In the edit form, show the time field only for "At a set time".
+      taskList.addEventListener("change", (event) => {
+        if (event.target.name !== "editWhen") return;
+
+        const timeField = event.target.form.elements.editTime;
+        timeField.hidden = event.target.value !== "at";
+        if (!timeField.hidden && !timeField.value) timeField.value = suggestedTime();
       });
 
       // Drag to reorder. The card follows the pointer, and it lands in a new spot
@@ -3207,6 +3779,7 @@
         selectedDate = button.dataset.date;
         calendarCursor = startOfMonth(dateFromKey(selectedDate));
         tasks = [];
+        resetTimeFields();
         await loadSelectedDateData();
       });
 
@@ -3225,8 +3798,18 @@
       todayButton.addEventListener("click", async () => {
         selectToday();
         tasks = [];
+        resetTimeFields();
         await loadSelectedDateData();
       });
+
+      // Suggested times depend on the day, so clear them when the day changes.
+      function resetTimeFields() {
+        taskTime.value = "";
+        startAtTime.value = "";
+        startAtOpen = false;
+        startMessage.textContent = "";
+        syncWhen();
+      }
 
       resetDayButton.addEventListener("click", resetSelectedDay);
       resetAllButton.addEventListener("click", resetAllTasks);
