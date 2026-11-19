@@ -3,7 +3,7 @@ import { promisify } from "node:util";
 import dotenv from "dotenv";
 import express from "express";
 import pg from "pg";
-import { gapStarts, rescheduleTasks } from "./schedule.js";
+import { gapStarts, rescheduleTasks, startPlan } from "./schedule.js";
 
 dotenv.config();
 
@@ -43,6 +43,8 @@ const taskColumns = `
   sort_order,
   done_adding,
   is_done,
+  scheduled_at,
+  waiting,
   created_at,
   updated_at
 `;
@@ -172,6 +174,14 @@ async function initDb() {
 
     alter table tasks
       add column if not exists is_done boolean not null default false;
+
+    -- scheduled_at: the time a task is set for (null means "next in line").
+    -- waiting: the task is on the list but has not been started yet.
+    alter table tasks
+      add column if not exists scheduled_at timestamptz;
+
+    alter table tasks
+      add column if not exists waiting boolean not null default false;
 
     create index if not exists tasks_user_date_sort_idx
       on tasks (user_id, task_date, sort_order, start_at);
@@ -321,13 +331,15 @@ app.post("/api/tasks", requireUser, async (req, res, next) => {
       end_at,
       sort_order,
       done_adding = false,
+      scheduled_at = null,
+      waiting = false,
     } = req.body;
 
     const { rows } = await pool.query(
       `insert into tasks (
         user_id, task_name, duration_minutes, task_date,
-        start_at, end_at, sort_order, done_adding
-      ) values ($1, $2, $3, $4, $5, $6, $7, $8)
+        start_at, end_at, sort_order, done_adding, scheduled_at, waiting
+      ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       returning ${taskColumns}`,
       [
         req.user.id,
@@ -338,12 +350,71 @@ app.post("/api/tasks", requireUser, async (req, res, next) => {
         end_at,
         sort_order,
         done_adding,
+        scheduled_at,
+        waiting === true,
       ],
     );
 
     res.status(201).json({ task: rows[0] });
   } catch (error) {
     next(error);
+  }
+});
+
+// Start the waiting tasks of a day at a given time ("Start now" sends the current time).
+app.post("/api/days/start", requireUser, async (req, res, next) => {
+  const taskDate = String(req.body.task_date || "");
+  const startAt = new Date(req.body.start_at);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(taskDate) || Number.isNaN(startAt.getTime())) {
+    return res.status(400).json({ error: "A valid day and start time are required." });
+  }
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    await client.query("begin");
+    const { rows } = await client.query(
+      `select ${taskColumns} from tasks
+       where user_id = $1 and task_date = $2
+       order by sort_order asc, start_at asc
+       for update`,
+      [req.user.id, taskDate],
+    );
+
+    if (!rows.some((task) => task.waiting)) {
+      await client.query("rollback");
+      return res.status(409).json({ error: "Nothing is waiting to start on this day." });
+    }
+
+    for (const task of startPlan(rows, startAt)) {
+      await client.query(
+        `update tasks
+         set start_at = $1,
+             end_at = $2,
+             sort_order = $3,
+             waiting = false,
+             updated_at = now()
+         where id = $4 and user_id = $5`,
+        [task.start_at, task.end_at, task.sort_order, task.id, req.user.id],
+      );
+    }
+
+    const startedResult = await client.query(
+      `select ${taskColumns} from tasks
+       where user_id = $1 and task_date = $2
+       order by sort_order asc, start_at asc`,
+      [req.user.id, taskDate],
+    );
+
+    await client.query("commit");
+    res.json({ tasks: startedResult.rows });
+  } catch (error) {
+    await client?.query("rollback").catch(() => {});
+    next(error);
+  } finally {
+    client?.release();
   }
 });
 
@@ -460,6 +531,9 @@ app.put("/api/tasks/:id", requireUser, async (req, res, next) => {
       sort_order,
       done_adding,
     } = req.body;
+    // Left alone unless the request includes them.
+    const hasScheduledAt = Object.hasOwn(req.body, "scheduled_at");
+    const hasWaiting = typeof req.body.waiting === "boolean";
 
     const { rows } = await pool.query(
       `update tasks
@@ -469,6 +543,8 @@ app.put("/api/tasks/:id", requireUser, async (req, res, next) => {
            end_at = $4,
            sort_order = $5,
            done_adding = $6,
+           scheduled_at = case when $9::boolean then $10::timestamptz else scheduled_at end,
+           waiting = case when $11::boolean then $12::boolean else waiting end,
            updated_at = now()
        where id = $7 and user_id = $8
        returning ${taskColumns}`,
@@ -481,6 +557,10 @@ app.put("/api/tasks/:id", requireUser, async (req, res, next) => {
         done_adding,
         req.params.id,
         req.user.id,
+        hasScheduledAt,
+        hasScheduledAt ? req.body.scheduled_at : null,
+        hasWaiting,
+        hasWaiting ? req.body.waiting : false,
       ],
     );
 
